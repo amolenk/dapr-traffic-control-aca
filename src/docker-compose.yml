@@ -1,0 +1,35 @@
+version: '3.4'
+
+services:
+
+  maildev:
+    image: maildev/maildev
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+
+  redis:
+    image: redis:alpine
+
+  sqldata:
+    image: mcr.microsoft.com/azure-sql-edge
+
+  zipkin:
+    image: openzipkin/zipkin-slim
+
+  finecollectionservice:
+    image: ${REGISTRY:-amolenk}/dapr-trafficcontrol-finecollectionservice:${TAG:-latest}
+    build:
+      context: ./FineCollectionService
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+
+  finecollectionservice-dapr:
+    image: "daprio/daprd:1.9.5"
+    network_mode: "service:finecollectionservice"
+    depends_on:
+      - finecollectionservice
+
+  dapr-placement:
+    image: "daprio/dapr:1.9.5"

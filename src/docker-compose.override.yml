@@ -1,0 +1,49 @@
+version: '3.4'
+
+services:
+
+  maildev:
+    ports:
+      - "1025:1025"
+      - "1080:1080"
+
+  rabbitmq:
+    ports:
+      - "6672:5672"
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  sqldata:
+    environment:
+      - SA_PASSWORD=Pass@word
+      - ACCEPT_EULA=Y
+    ports:
+      - "1433:1433"
+    volumes:
+      - dtc-sqldata:/var/opt/mssql
+
+  zipkin:
+    ports:
+      - "9411:9411"
+
+  finecollectionservice:
+    ports:
+      - "6001:80"
+
+  finecollectionservice-dapr:
+    command: ["./daprd",
+      "-app-id", "finecollectionservice",
+      "-app-port", "80",
+      "-components-path", "/components",
+      "-config", "/configuration/config.yaml"
+      ]
+    volumes:
+      - "./dapr/components/:/components"
+      - "./dapr/configuration/:/configuration"
+
+volumes:
+  dtc-sqldata:
+    external: false

@@ -40,6 +40,11 @@ public class CollectionController : ControllerBase
         }
     }
 
+    public ActionResult Ping()
+    {
+        return Ok("Pong");
+    }
+
     [Topic("pubsub", "speedingviolations", "deadletters", false)]
     [Route("collectfine")]
     [HttpPost()]
