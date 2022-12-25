@@ -40,6 +40,8 @@ public class CollectionController : ControllerBase
         }
     }
 
+    [Route("collectfine")]
+    [HttpGet]
     public ActionResult Ping()
     {
         return Ok("Pong");
