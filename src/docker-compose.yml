@@ -31,5 +31,5 @@ services:
     depends_on:
       - finecollectionservice
 
-  dapr-placement:
-    image: "daprio/dapr:1.9.5"
+  # dapr-placement:
+  #   image: "daprio/dapr:1.9.5"
