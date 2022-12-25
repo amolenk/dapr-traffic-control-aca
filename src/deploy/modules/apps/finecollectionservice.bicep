@@ -34,11 +34,11 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
       dapr: {
         enabled: true
         appId: 'finecollectionservice'
-        appPort: 443
+        appPort: 80
       }
       ingress: {
         external: true
-        targetPort: 443
+        targetPort: 80
         // allowInsecure: false
       }
     }
