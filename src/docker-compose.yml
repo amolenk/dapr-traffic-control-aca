@@ -11,7 +11,7 @@ services:
   redis:
     image: redis:alpine
 
-  sqldata:
+  sql:
     image: mcr.microsoft.com/azure-sql-edge
 
   zipkin:
@@ -23,7 +23,9 @@ services:
       context: ./FineCollectionService
       dockerfile: Dockerfile
     depends_on:
-      - redis
+      - rabbitmq
+      - sql
+      - zipkin
 
   finecollectionservice-dapr:
     image: "daprio/daprd:1.9.5"
@@ -31,5 +33,17 @@ services:
     depends_on:
       - finecollectionservice
 
+  vehicleregistrationservice:
+    image: ${REGISTRY:-amolenk}/dapr-trafficcontrol-vehicleregistrationservice:${TAG:-latest}
+    build:
+      context: ./VehicleRegistrationService
+      dockerfile: Dockerfile
+  
+  vehicleregistrationservice-dapr:
+    image: "daprio/daprd:1.9.5"
+    network_mode: "service:vehicleregistrationservice"
+    depends_on:
+      - vehicleregistrationservice
+  
   # dapr-placement:
   #   image: "daprio/dapr:1.9.5"

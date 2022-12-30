@@ -13,11 +13,11 @@ spec:
     value: 25
   - name: user
     secretKeyRef:
-      name: trafficcontrol-secrets
+      name: secretstore
       key: smtp.user
   - name: password
     secretKeyRef:
-      name: trafficcontrol-secrets
+      name: secretstore
       key: smtp.password
   - name: skipTLSVerify
     value: true

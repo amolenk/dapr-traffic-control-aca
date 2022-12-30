@@ -11,11 +11,11 @@ spec:
     value: localhost:6379
   - name: redisPassword
     secretKeyRef:
-      name: state.redisPassword
-      key: state.redisPassword
+      name: Redis:Password
+      key: Redis:Password
   - name: actorStateStore
     value: "true"
 auth:
-  secretStore: trafficcontrol-secrets
+  secretStore: secretstore
 scopes:
   - trafficcontrolservice

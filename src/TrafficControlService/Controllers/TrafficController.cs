@@ -87,6 +87,7 @@ public class TrafficController : ControllerBase
 
                 var speedingViolation = new SpeedingViolation
                 {
+                    Id = Guid.NewGuid().ToString("N"),
                     VehicleId = msg.LicenseNumber,
                     RoadId = _roadId,
                     ViolationInKmh = violation,

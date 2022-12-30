@@ -9,3 +9,7 @@ Pop-Location
 Push-Location -Path maildev
 & ./start-maildev.ps1
 Pop-Location
+
+Push-Location -Path sqledge
+& ./start-sqledge.ps1
+Pop-Location

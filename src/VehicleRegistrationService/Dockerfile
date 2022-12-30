@@ -13,9 +13,5 @@ RUN dotnet publish -c Release -o out VehicleRegistrationService.csproj
 FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
 COPY --from=build-env /app/out .
 
-# Expose ports
-EXPOSE 6002/tcp
-ENV ASPNETCORE_URLS http://*:6002
-
 # Start
 ENTRYPOINT ["dotnet", "VehicleRegistrationService.dll"]

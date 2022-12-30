@@ -7,16 +7,12 @@ services:
       - "1025:1025"
       - "1080:1080"
 
-  rabbitmq:
-    ports:
-      - "6672:5672"
-
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
 
-  sqldata:
+  sql:
     environment:
       - SA_PASSWORD=Pass@word
       - ACCEPT_EULA=Y
@@ -30,6 +26,8 @@ services:
       - "9411:9411"
 
   finecollectionservice:
+    environment:
+      - RetryMigrations=true
     ports:
       - "6001:80"
 
@@ -39,6 +37,21 @@ services:
       "-app-port", "80",
       "-components-path", "/components",
       "-config", "/configuration/config.yaml"
+      ]
+    volumes:
+      - "./dapr/components/:/components"
+      - "./dapr/configuration/:/configuration"
+
+  vehicleregistrationservice:
+    ports:
+      - "6002:80"
+
+  vehicleregistrationservice-dapr:
+    command: ["./daprd",
+      "-app-id", "vehicleregistrationservice",
+      "-app-port", "80",
+      "-components-path", "/components",
+      # "-config", "/configuration/config.yaml"
       ]
     volumes:
       - "./dapr/components/:/components"
