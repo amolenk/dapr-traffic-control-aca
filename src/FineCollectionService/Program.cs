@@ -3,11 +3,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services
-    .AddSingleton<IFineCalculator, HardCodedFineCalculator>()
-    .AddTransient<SpeedingViolationHandler>()
-    .AddTransient<QueryRecentFinesHandler>();
-
 builder.Services.AddDaprClient();
 
 builder.Configuration.AddDaprSecretStore(
@@ -15,8 +10,15 @@ builder.Configuration.AddDaprSecretStore(
     new DaprClientBuilder().Build(),
     new string[] { "--" });
 
+Console.WriteLine("YO!!");
+
 Console.WriteLine(builder.Configuration["Smtp:Password"]);
 Console.WriteLine(builder.Configuration["ConnectionStrings:FineDb"]);
+
+builder.Services
+    .AddSingleton<IFineCalculator, HardCodedFineCalculator>()
+    .AddTransient<SpeedingViolationHandler>()
+    .AddTransient<QueryRecentFinesHandler>();
 
 builder.Services.AddDbContext<FineDbContext>(
     options => options.UseSqlServer(builder.Configuration["ConnectionStrings:FineDb"]));
