@@ -1,6 +1,9 @@
 param location string = resourceGroup().location
 param uniqueSeed string = '${resourceGroup().id}-${deployment().name}'
 
+@secure()
+param sqlAdministratorLoginPassword string = 'Pass@word'
+
 ////////////////////////////////////////////////////////////////////////////////
 // Infrastructure
 ////////////////////////////////////////////////////////////////////////////////
@@ -13,11 +16,22 @@ module managedIdentity 'modules/infra/managed-identity.bicep' = {
   }
 }
 
+module virtualNetwork 'modules/infra/virtual-network.bicep' = {
+  name: '${deployment().name}-infra-vnet'
+  params: {
+    location: location
+    uniqueSeed: uniqueSeed
+  }
+}
+
 module containerAppsEnvironment 'modules/infra/container-apps-env.bicep' = {
   name: '${deployment().name}-infra-container-app-env'
   params: {
     location: location
     uniqueSeed: uniqueSeed
+    vnetName: virtualNetwork.outputs.vnetName
+    infraSubnetName: virtualNetwork.outputs.infraSubnetName
+    runtimeSubnetName: virtualNetwork.outputs.runtimeSubnetName
   }
 }
 
@@ -46,14 +60,14 @@ module keyVault 'modules/infra/key-vault.bicep' = {
 //   }
 // }
 
-// module sqlServer 'modules/infra/sql-server.bicep' = {
-//   name: '${deployment().name}-infra-sql-server'
-//   params: {
-//     location: location
-//     uniqueSeed: uniqueSeed
-//     keyVaultName: keyVault.outputs.keyVaultName
-//   }
-// }
+module sqlServer 'modules/infra/sql-server.bicep' = {
+  name: '${deployment().name}-infra-sql-server'
+  params: {
+    location: location
+    uniqueSeed: uniqueSeed
+    sqlAdministratorLoginPassword: sqlAdministratorLoginPassword
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Dapr components
@@ -67,14 +81,14 @@ module keyVault 'modules/infra/key-vault.bicep' = {
 //   }
 // }
 
-// module daprSecretStore 'modules/dapr/secretstore.bicep' = {
-//   name: '${deployment().name}-dapr-secretstore'
-//   params: {
-//     containerAppsEnvironmentName: containerAppsEnvironment.outputs.name
-//     managedIdentityName: managedIdentity.outputs.managedIdentityName
-//     vaultName: keyVault.outputs.keyVaultName
-//   }
-// }
+module daprSecretStore 'modules/dapr/secretstore.bicep' = {
+  name: '${deployment().name}-dapr-secretstore'
+  params: {
+    containerAppsEnvironmentName: containerAppsEnvironment.outputs.name
+    managedIdentityName: managedIdentity.outputs.managedIdentityName
+    vaultName: keyVault.outputs.keyVaultName
+  }
+}
 
 // module daprStateStore 'modules/dapr/statestore.bicep' = {
 //   name: '${deployment().name}-dapr-statestore'
@@ -119,17 +133,20 @@ module keyVault 'modules/infra/key-vault.bicep' = {
 //   }
 // }
 
-module catalogApi 'modules/apps/finecollectionservice.bicep' = {
+module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
   name: '${deployment().name}-app-finecollection'
-//   dependsOn: [
-// //    daprPubSub
-//     seq
-//   ]
+  dependsOn: [
+    daprSecretStore
+    sqlServer
+  ]
   params: {
     location: location
-    // seqFqdn: seq.outputs.fqdn
     containerAppsEnvironmentId: containerAppsEnvironment.outputs.id
     managedIdentityName: managedIdentity.outputs.managedIdentityName
+    keyVaultName: keyVault.outputs.keyVaultName
+    sqlServerName: sqlServer.outputs.sqlServerName
+    sqlAdministratorLogin: sqlServer.outputs.sqlAdministratorLogin
+    sqlAdministratorLoginPassword: sqlAdministratorLoginPassword
   }
 }
 

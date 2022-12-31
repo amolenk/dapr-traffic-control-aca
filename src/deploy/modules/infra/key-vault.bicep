@@ -18,12 +18,26 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
     }
   }
 
-  // resource catalogDBConnectionStringSecret 'secrets' = {
-  //   name: 'ConnectionStrings__CatalogDB'
-  //   properties: {
-  //     value: catalogDBConnectionString
-  //   }
-  // }
+  resource licenseKeySecret 'secrets' = {
+    name: 'FineCalculator--LicenseKey'
+    properties: {
+      value: 'HX783-K2L7V-CRJ4A-5PN1G'
+    }
+  }
+
+  resource smtpUserSecret 'secrets' = {
+    name: 'Smtp--User'
+    properties: {
+      value: '_username'
+    }
+  }
+
+  resource smtpPasswordSecret 'secrets' = {
+    name: 'Smtp--Password'
+    properties: {
+      value: '_password'
+    }
+  }
 }
 
 @description('This is the built-in Key Vault Secrets User role.')

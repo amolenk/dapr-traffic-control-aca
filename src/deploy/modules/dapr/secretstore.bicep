@@ -10,7 +10,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
   name: containerAppsEnvironmentName
 
   resource secretstore 'daprComponents@2022-03-01' = {
-    name: 'eshopondapr-secretstore'
+    name: 'secretstore'
     properties: {
       componentType: 'secretstores.azure.keyvault'
       version: 'v1'
@@ -25,7 +25,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
         }
       ]
       scopes: [
-        'catalog-api'
+        'finecollectionservice'
       ]
     }
   }

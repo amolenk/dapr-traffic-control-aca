@@ -3,6 +3,9 @@ param uniqueSeed string
 param containerAppsEnvironmentName string = 'containerappenv-${uniqueString(uniqueSeed)}'
 param logAnalyticsWorkspaceName string = 'loganalytics-${uniqueString(uniqueSeed)}'
 param appInsightsName string = 'appinsights-${uniqueString(uniqueSeed)}'
+param vnetName string
+param infraSubnetName string
+param runtimeSubnetName string
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: logAnalyticsWorkspaceName
@@ -33,6 +36,11 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
   location: location
   properties: {
     daprAIInstrumentationKey: appInsights.properties.InstrumentationKey
+    vnetConfiguration: {
+//      internal: false
+      infrastructureSubnetId: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, infraSubnetName)
+//      runtimeSubnetId: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, runtimeSubnetName)
+    }
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {

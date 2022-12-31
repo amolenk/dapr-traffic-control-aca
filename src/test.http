@@ -1,12 +1,14 @@
 
-@host = finecollectionservice.wonderfulcliff-d7233a56.westeurope.azurecontainerapps.io
+@host = finecollectionservice.wittysand-fa5a5360.westeurope.azurecontainerapps.io
 
 GET https://{{host}}/
 
-###
-
-// Publish speeding violation
+### Trigger speeding violation
 POST https://{{host}}/collectfine
 Content-Type: application/json
 
 { "vehicleId": "RK-546-V", "roadId": "A12", "violationInKmh": 15, "timestamp": "2020-09-20T08:33:41" }
+
+### Get recent fines
+GET https://{{host}}/query/recent
+Content-Type: application/json
