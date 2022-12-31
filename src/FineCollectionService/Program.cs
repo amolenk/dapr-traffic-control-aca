@@ -8,14 +8,18 @@ builder.Services
     .AddTransient<SpeedingViolationHandler>()
     .AddTransient<QueryRecentFinesHandler>();
 
-builder.Services.AddDbContext<FineDbContext>(
-    options => options.UseSqlServer(builder.Configuration["ConnectionStrings:FineDb"]));
-
 builder.Services.AddDaprClient();
 
 builder.Configuration.AddDaprSecretStore(
     "secretstore",
-    new DaprClientBuilder().Build());
+    new DaprClientBuilder().Build(),
+    new string[] { "--" });
+
+Console.WriteLine(builder.Configuration["Smtp:Password"]);
+Console.WriteLine(builder.Configuration["ConnectionStrings:FineDb"]);
+
+builder.Services.AddDbContext<FineDbContext>(
+    options => options.UseSqlServer(builder.Configuration["ConnectionStrings:FineDb"]));
 
 builder.Services.AddSingleton<VehicleRegistrationServiceClient>(_ =>
     new VehicleRegistrationServiceClient(DaprClient.CreateInvokeHttpClient(
