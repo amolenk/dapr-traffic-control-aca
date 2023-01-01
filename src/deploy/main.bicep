@@ -2,7 +2,11 @@ param location string = resourceGroup().location
 param uniqueSeed string = '${resourceGroup().id}-${deployment().name}'
 
 @secure()
-param sqlAdministratorLoginPassword string = 'Pass@word'
+param sqlAdministratorLoginPassword string
+
+param authClientId string
+@secure()
+param authClientSecret string
 
 ////////////////////////////////////////////////////////////////////////////////
 // Infrastructure
@@ -147,6 +151,21 @@ module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
     sqlServerName: sqlServer.outputs.sqlServerName
     sqlAdministratorLogin: sqlServer.outputs.sqlAdministratorLogin
     sqlAdministratorLoginPassword: sqlAdministratorLoginPassword
+  }
+}
+
+module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
+  name: '${deployment().name}-app-ui'
+  dependsOn: [
+    daprSecretStore
+    sqlServer
+  ]
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppsEnvironment.outputs.id
+    managedIdentityName: managedIdentity.outputs.managedIdentityName
+    authClientId: authClientId
+    authClientSecret: authClientSecret
   }
 }
 
