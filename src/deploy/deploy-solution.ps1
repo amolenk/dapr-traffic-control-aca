@@ -10,12 +10,22 @@ $applicationDisplayName = 'DaprTrafficControlUI'
 # Create application (or patch if it already exists).
 $applicationClientId = (az ad app create --display-name $applicationDisplayName | ConvertFrom-JSON).appId
 
-$applicationUrl = 'https://trafficcontrolui.wittysand-fa5a5360.westeurope.azurecontainerapps.io'
-
 # Get client secret
 $clientSecret = (az ad app credential reset `
     --id $applicationClientId `
     --display-name 'Generated for Azure Container App' | ConvertFrom-Json).password
+
+# Create resource group
+az group create --name DaprTrafficControlACA --location WestEurope
+
+# Deploy resources
+$containerAppsEnvironmentDomain = (az deployment group create `
+    --resource-group DaprTrafficControlACA `
+    --template-file main.bicep `
+    --parameters sqlAdministratorLoginPassword=Pass@word authClientId=$applicationClientId authClientSecret=$clientSecret `
+    | ConvertFrom-Json).properties.outputs.containerAppsEnvironmentDomain.value
+
+$applicationUrl = "https://trafficcontrolui.$containerAppsEnvironmentDomain"
 
 # Update app registration for EasyAuth.
 az ad app update `
@@ -50,8 +60,5 @@ az rest --method PATCH `
     --uri "https://graph.microsoft.com/v1.0/applications/$applicationObjectId" `
     --body $scopeBody
 
-az deployment group create `
-    --resource-group DaprTrafficControlACA `
-    --template-file main.bicep `
-    --parameters sqlAdministratorLoginPassword=Pass@word authClientId=$applicationClientId authClientSecret=$clientSecret
+
 

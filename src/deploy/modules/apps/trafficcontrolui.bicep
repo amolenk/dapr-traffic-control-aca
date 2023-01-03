@@ -59,8 +59,7 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
         enabled: true
       }
       globalValidation: {
-        unauthenticatedClientAction: 'RedirectToLoginPage'
-        redirectToProvider: 'azureactivedirectory'
+        unauthenticatedClientAction: 'AllowAnonymous'
       }
       identityProviders: {
         azureActiveDirectory: {

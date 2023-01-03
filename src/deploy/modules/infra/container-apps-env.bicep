@@ -5,7 +5,6 @@ param logAnalyticsWorkspaceName string = 'loganalytics-${uniqueString(uniqueSeed
 param appInsightsName string = 'appinsights-${uniqueString(uniqueSeed)}'
 param vnetName string
 param infraSubnetName string
-param runtimeSubnetName string
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: logAnalyticsWorkspaceName

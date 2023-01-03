@@ -35,7 +35,6 @@ module containerAppsEnvironment 'modules/infra/container-apps-env.bicep' = {
     uniqueSeed: uniqueSeed
     vnetName: virtualNetwork.outputs.vnetName
     infraSubnetName: virtualNetwork.outputs.infraSubnetName
-    runtimeSubnetName: virtualNetwork.outputs.runtimeSubnetName
   }
 }
 
@@ -256,3 +255,5 @@ module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
 //     containerAppsEnvironmentDomain: containerAppsEnvironment.outputs.domain
 //   }
 // }
+
+output containerAppsEnvironmentDomain string = containerAppsEnvironment.outputs.domain
