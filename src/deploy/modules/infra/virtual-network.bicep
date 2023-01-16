@@ -33,4 +33,3 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-05-01' = {
 
 output vnetName string = virtualNetworkName
 output infraSubnetName string = infraSubnetName
-output runtimeSubnetName string = runtimeSubnetName

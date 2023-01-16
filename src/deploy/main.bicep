@@ -2,7 +2,11 @@ param location string = resourceGroup().location
 param uniqueSeed string = '${resourceGroup().id}-${deployment().name}'
 
 @secure()
-param sqlAdministratorLoginPassword string = 'Pass@word'
+param sqlAdministratorLoginPassword string
+
+param authClientId string
+@secure()
+param authClientSecret string
 
 ////////////////////////////////////////////////////////////////////////////////
 // Infrastructure
@@ -31,7 +35,6 @@ module containerAppsEnvironment 'modules/infra/container-apps-env.bicep' = {
     uniqueSeed: uniqueSeed
     vnetName: virtualNetwork.outputs.vnetName
     infraSubnetName: virtualNetwork.outputs.infraSubnetName
-    runtimeSubnetName: virtualNetwork.outputs.runtimeSubnetName
   }
 }
 
@@ -150,6 +153,21 @@ module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
   }
 }
 
+module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
+  name: '${deployment().name}-app-ui'
+  dependsOn: [
+    daprSecretStore
+    sqlServer
+  ]
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppsEnvironment.outputs.id
+    managedIdentityName: managedIdentity.outputs.managedIdentityName
+    authClientId: authClientId
+    authClientSecret: authClientSecret
+  }
+}
+
 // module identityApi 'modules/apps/identity-api.bicep' = {
 //   name: '${deployment().name}-app-identity-api'
 //   dependsOn: [
@@ -237,3 +255,5 @@ module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
 //     containerAppsEnvironmentDomain: containerAppsEnvironment.outputs.domain
 //   }
 // }
+
+output containerAppsEnvironmentDomain string = containerAppsEnvironment.outputs.domain
