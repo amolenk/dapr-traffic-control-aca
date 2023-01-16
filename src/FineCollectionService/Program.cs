@@ -37,6 +37,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseCloudEvents();
 
+var httpClient = DaprClient.CreateInvokeHttpClient();
+
 // Configure routes
 
 app.MapPost("/speedingviolation", async (
@@ -45,7 +47,40 @@ app.MapPost("/speedingviolation", async (
 {
     await handler.HandleAsync(speedingViolation);
     return Results.Ok();
-}).WithTopic("pubsub", "speedingviolations");
+})
+.WithTopic("pubsub", "speedingviolations");
+
+app.MapPost("/speedingviolation", async (
+    SpeedingViolation speedingViolation,
+    IFineCalculator fineCalculator,
+    DaprClient daprClient,
+    IConfiguration configuration,
+    ILogger logger) =>
+{
+    var licenseKey = configuration["FineCalculator:LicenseKey"];
+
+    var fineAmount = fineCalculator.CalculateFine(
+        licenseKey,
+        speedingViolation.ViolationInKmh);
+
+    var vehicleInfo = await httpClient.GetFromJsonAsync<VehicleInfo>(
+        $"http://vehicleregistrationservice/vehicleinfo/{licenseNumber}");
+
+
+    // log fine
+    string fineString = fineAmount == 0 ? "tbd by the prosecutor" : $"{fineAmount} Euro";
+    logger.LogInformation($"Sent speeding ticket to {vehicleInfo.OwnerName}. " +
+        $"Road: {speedingViolation.RoadId}, Licensenumber: {speedingViolation.VehicleId}, " +
+        $"Vehicle: {vehicleInfo.Brand} {vehicleInfo.Model}, " +
+        $"Violation: {speedingViolation.ViolationInKmh} Km/h, Fine: {fineString}, " +
+        $"On: {speedingViolation.Timestamp.ToString("dd-MM-yyyy")} " +
+        $"at {speedingViolation.Timestamp.ToString("hh:mm:ss")}.");
+
+//    await daprClient.PublishEventAsync("pubsub", "finecalculated", speedingViolation);
+    return Results.Ok();
+})
+.WithTopic("pubsub", "speedingviolations");
+
 
 app.MapGet("/query/recent", async ([FromServices] QueryRecentFinesHandler handler) =>
 {

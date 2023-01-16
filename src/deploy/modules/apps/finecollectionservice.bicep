@@ -37,7 +37,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
   }
 }
 
-resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
+resource containerApp 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: 'finecollectionservice'
   location: location
   identity: {
@@ -66,10 +66,6 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
         enabled: true
         appId: 'finecollectionservice'
         appPort: 80
-      }
-      ingress: {
-        external: true
-        targetPort: 80
       }
     }
   }

@@ -9,7 +9,7 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
   name: containerAppsEnvironmentName
 
-  resource secretstore 'daprComponents@2022-03-01' = {
+  resource secretstore 'daprComponents@2022-06-01-preview' = {
     name: 'secretstore'
     properties: {
       componentType: 'secretstores.azure.keyvault'
@@ -26,6 +26,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
       ]
       scopes: [
         'finecollectionservice'
+        'trafficcontrolservice'
       ]
     }
   }

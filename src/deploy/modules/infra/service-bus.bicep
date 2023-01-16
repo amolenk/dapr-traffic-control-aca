@@ -1,5 +1,6 @@
 param location string
 param uniqueSeed string
+param keyVaultName string
 
 resource serviceBus 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' = {
   name: 'sb-${uniqueString(uniqueSeed)}'
@@ -10,4 +11,13 @@ resource serviceBus 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' = {
   }
 }
 
-output connectionString string = 'Endpoint=sb://${serviceBus.name}.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=${listKeys('${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey', serviceBus.apiVersion).primaryKey}'
+resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
+  name: keyVaultName
+
+  resource cosmosKeySecret 'secrets' = {
+    name: 'ConnectionStrings--ServiceBus'
+    properties: {
+      value: 'Endpoint=sb://${serviceBus.name}.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=${listKeys('${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey', serviceBus.apiVersion).primaryKey}'
+    }
+  }
+}

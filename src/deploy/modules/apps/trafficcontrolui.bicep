@@ -9,7 +9,7 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-
   name: managedIdentityName
 }
 
-resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
+resource containerApp 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: 'trafficcontrolui'
   location: location
   identity: {

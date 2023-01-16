@@ -30,15 +30,13 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = {
+resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-06-01-preview' = {
   name: containerAppsEnvironmentName
   location: location
   properties: {
     daprAIInstrumentationKey: appInsights.properties.InstrumentationKey
     vnetConfiguration: {
-//      internal: false
       infrastructureSubnetId: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, infraSubnetName)
-//      runtimeSubnetId: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, runtimeSubnetName)
     }
     appLogsConfiguration: {
       destination: 'log-analytics'

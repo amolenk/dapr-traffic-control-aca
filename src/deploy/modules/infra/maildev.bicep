@@ -1,22 +1,18 @@
 param location string
 param containerAppsEnvironmentId string
 
+param smtpPort int = 1025
+
 resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
-  name: 'seq'
+  name: 'maildev'
   location: location
   properties: {
     managedEnvironmentId: containerAppsEnvironmentId
     template: {
       containers: [
         {
-          name: 'seq'
-          image: 'datalust/seq:latest'
-          env: [
-            {
-              name: 'ACCEPT_EULA'
-              value: 'Y'
-            }
-          ]
+          name: 'maildev'
+          image: 'maildev/maildev:2.0.5'
         }
       ]
       scale: {
@@ -27,11 +23,12 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
     configuration: {
       activeRevisionsMode: 'single'
       ingress: {
-        external: true
-        targetPort: 80
+        targetPort: smtpPort
+        exposedPort: smtpPort
+        transport: 'tcp'
       }
     }
   }
 }
 
-output fqdn string = containerApp.properties.configuration.ingress.fqdn
+output smptPort int = smtpPort

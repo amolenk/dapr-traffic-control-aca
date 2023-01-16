@@ -1,42 +1,40 @@
 param containerAppsEnvironmentName string
-
-param cosmosDbName string
-param cosmosCollectionName string
-param cosmosUrl string
+param smtpHost string
+param smtpPort int
 
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-06-01-preview' existing = {
   name: containerAppsEnvironmentName
 
   resource daprComponent 'daprComponents@2022-06-01-preview' = {
-    name: 'statestore'
+    name: 'sendmail'
     properties: {
-      componentType: 'state.azure.cosmosdb'
+      componentType: 'bindings.smtp'
       version: 'v1'
       secretStoreComponent: 'secretstore'
       metadata: [
         {
-          name: 'url'
-          value: cosmosUrl
+          name: 'host'
+          value: smtpHost
         }
         {
-          name: 'masterKey'
-          secretRef: 'CosmosDb--PrimaryKey'
+          name: 'port'
+          value: string(smtpPort)
         }
         {
-          name: 'database'
-          value: cosmosDbName
+          name: 'user'
+          secretRef: 'Smtp--User'
         }
         {
-          name: 'collection'
-          value: cosmosCollectionName
+          name: 'password'
+          secretRef: 'Smtp--Password'
         }
         {
-          name: 'actorStateStore'
+          name: 'skipTLSVerify'
           value: 'true'
         }
       ]
       scopes: [
-        'trafficcontrolservice'
+        'finecollectionservice'
       ]
     }
   }

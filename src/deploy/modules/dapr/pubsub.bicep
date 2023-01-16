@@ -1,36 +1,24 @@
 param containerAppsEnvironmentName string
 
-@secure()
-param serviceBusConnectionString string
-
-resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
+resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-06-01-preview' existing = {
   name: containerAppsEnvironmentName
 
-  resource daprComponent 'daprComponents@2022-03-01' = {
-    name: 'eshopondapr-pubsub'
+  resource daprComponent 'daprComponents@2022-06-01-preview' = {
+    name: 'pubsub'
     properties: {
       componentType: 'pubsub.azure.servicebus'
       version: 'v1'
-      secrets: [
-        {
-          name: 'service-bus-connection-string'
-          value: serviceBusConnectionString
-        }
-      ]
+      secretStoreComponent: 'secretstore'
       metadata: [
         {
           name: 'connectionString'
-          secretRef: 'service-bus-connection-string'
+          secretRef: 'ConnectionStrings--ServiceBus'
         }
       ]
       scopes: [
-        'basket-api'
-        'catalog-api'
-        'ordering-api'
-        'payment-api'
+        'trafficcontrolservice'
+        'finecollectionservice'
       ]
     }
   }
 }
-
-output daprPubSubName string = containerAppsEnvironment::daprComponent.name
