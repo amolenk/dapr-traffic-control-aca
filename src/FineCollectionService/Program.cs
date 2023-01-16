@@ -10,11 +10,6 @@ builder.Configuration.AddDaprSecretStore(
     new DaprClientBuilder().Build(),
     new string[] { "--" });
 
-Console.WriteLine("YO!!");
-
-Console.WriteLine(builder.Configuration["Smtp:Password"]);
-Console.WriteLine(builder.Configuration["ConnectionStrings:FineDb"]);
-
 builder.Services
     .AddSingleton<IFineCalculator, HardCodedFineCalculator>()
     .AddTransient<SpeedingViolationHandler>()

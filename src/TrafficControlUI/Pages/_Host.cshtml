@@ -1,0 +1,23 @@
+﻿@page "/"
+@namespace TrafficControlUI.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    Layout = "_Layout";
+
+    // For security reasons, you must not use IHttpContextAccessor within Blazor
+    // apps. Blazor apps run outside of the context of the ASP.NET Core pipeline.
+    // The HttpContext isn't guaranteed to be available within the IHttpContextAccessor,
+    // nor is it guaranteed to be holding the context that started the Blazor app.
+    //
+    // The recommended way to pass request state to the Blazor app is through
+    // parameters to the root component in the initial rendering of the app.
+
+    var initialState = new InitialApplicationState();
+
+    if (HttpContext.Request.Headers.TryGetValue("X-MS-CLIENT-PRINCIPAL", out var value))
+    { 
+        initialState.MsClientPrincipal = MsClientPrincipal.Deserialize(value);
+    }
+}
+
+<component type="typeof(App)" param-InitialState="initialState" render-mode="ServerPrerendered" />

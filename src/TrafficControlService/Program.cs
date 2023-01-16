@@ -22,6 +22,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
+
 app.UseCloudEvents();
 
 // configure routing
