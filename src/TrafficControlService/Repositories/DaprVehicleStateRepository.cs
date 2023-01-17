@@ -7,7 +7,7 @@ public class DaprVehicleStateRepository : IVehicleStateRepository
 
     public DaprVehicleStateRepository(DaprClient daprClient)
     {
-        _daprClient = daprClient;
+        _daprClient = daprClient;        
     }
 
     public async Task SaveVehicleStateAsync(VehicleState vehicleState)

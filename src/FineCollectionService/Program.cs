@@ -10,13 +10,7 @@ builder.Configuration.AddDaprSecretStore(
     new DaprClientBuilder().Build(),
     new string[] { "--" });
 
-builder.Services
-    .AddSingleton<IFineCalculator, HardCodedFineCalculator>()
-    .AddTransient<SpeedingViolationHandler>()
-    .AddTransient<QueryRecentFinesHandler>();
-
-builder.Services.AddDbContext<FineDbContext>(
-    options => options.UseSqlServer(builder.Configuration["ConnectionStrings:FineDb"]));
+builder.Services.AddSingleton<IFineCalculator, HardCodedFineCalculator>();
 
 builder.Services.AddSingleton<VehicleRegistrationServiceClient>(_ =>
     new VehicleRegistrationServiceClient(DaprClient.CreateInvokeHttpClient(
@@ -31,64 +25,48 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCloudEvents();
+app.MapSubscribeHandler();
 
 var httpClient = DaprClient.CreateInvokeHttpClient();
 
 // Configure routes
 
 app.MapPost("/speedingviolation", async (
-    [FromBody] SpeedingViolation speedingViolation,
-    [FromServices] SpeedingViolationHandler handler) =>
-{
-    await handler.HandleAsync(speedingViolation);
-    return Results.Ok();
-})
-.WithTopic("pubsub", "speedingviolations");
-
-app.MapPost("/speedingviolation", async (
-    SpeedingViolation speedingViolation,
+    SpeedingViolationDetected msg,
     IFineCalculator fineCalculator,
     DaprClient daprClient,
     IConfiguration configuration,
-    ILogger logger) =>
+    ILogger<Program> logger) =>
 {
     var licenseKey = configuration["FineCalculator:LicenseKey"];
 
     var fineAmount = fineCalculator.CalculateFine(
         licenseKey,
-        speedingViolation.ViolationInKmh);
+        msg.ViolationInKmh);
 
     var vehicleInfo = await httpClient.GetFromJsonAsync<VehicleInfo>(
-        $"http://vehicleregistrationservice/vehicleinfo/{licenseNumber}");
+        $"http://vehicleregistrationservice/vehicleinfo/{msg.VehicleId}");
 
+    var fineCalculated = new FineCalculated(
+        msg.Id,
+        fineAmount,
+        msg.VehicleId,
+        msg.RoadId,
+        vehicleInfo.OwnerName,
+        vehicleInfo.OwnerEmail,
+        vehicleInfo.Brand,
+        vehicleInfo.Model,
+        msg.ViolationInKmh,
+        msg.Timestamp);
 
     // log fine
-    string fineString = fineAmount == 0 ? "tbd by the prosecutor" : $"{fineAmount} Euro";
-    logger.LogInformation($"Sent speeding ticket to {vehicleInfo.OwnerName}. " +
-        $"Road: {speedingViolation.RoadId}, Licensenumber: {speedingViolation.VehicleId}, " +
-        $"Vehicle: {vehicleInfo.Brand} {vehicleInfo.Model}, " +
-        $"Violation: {speedingViolation.ViolationInKmh} Km/h, Fine: {fineString}, " +
-        $"On: {speedingViolation.Timestamp.ToString("dd-MM-yyyy")} " +
-        $"at {speedingViolation.Timestamp.ToString("hh:mm:ss")}.");
+    logger.LogInformation($"Calculated fine amount for speeding ticket {fineCalculated.Id}.");
 
-//    await daprClient.PublishEventAsync("pubsub", "finecalculated", speedingViolation);
+    await daprClient.PublishEventAsync("pubsub", "finecalculated", fineCalculated);
+
     return Results.Ok();
 })
 .WithTopic("pubsub", "speedingviolations");
-
-
-app.MapGet("/query/recent", async ([FromServices] QueryRecentFinesHandler handler) =>
-{
-    var recentFines = await handler.HandleAsync();
-    return Results.Ok(recentFines);
-});
-
-app.MapSubscribeHandler();
-
-// Migrate database
-using var scope = app.Services.CreateScope();
-var dbContext = scope.ServiceProvider.GetRequiredService<FineDbContext>();
-await dbContext.Database.MigrateAsync();
 
 // let's go!
 app.Run();

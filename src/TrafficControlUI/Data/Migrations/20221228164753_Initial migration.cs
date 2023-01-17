@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FineCollectionService.Database.Migrations
+namespace TrafficControlUI.Data.Migrations
 {
     public partial class Initialmigration : Migration
     {

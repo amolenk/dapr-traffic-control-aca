@@ -11,7 +11,7 @@ namespace TrafficControlUI;
 
 public class EasyAuthStateProvider : AuthenticationStateProvider
 {
-    public MsClientPrincipal? ClientPrincipal { get; set; }
+    public MsClientPrincipal ClientPrincipal { get; set; }
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync()
     {

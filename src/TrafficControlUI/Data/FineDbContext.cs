@@ -1,4 +1,4 @@
-﻿namespace FineCollectionService.Database;
+﻿namespace TrafficControlUI.Data;
 
 public class FineDbContext : DbContext
 {
