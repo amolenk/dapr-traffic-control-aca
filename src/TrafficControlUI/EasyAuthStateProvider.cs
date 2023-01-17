@@ -11,47 +11,27 @@ namespace TrafficControlUI;
 
 public class EasyAuthStateProvider : AuthenticationStateProvider
 {
-    private readonly TokenProvider _tokenProvider;
-
-    public EasyAuthStateProvider(TokenProvider tokenProvider)
-    {
-        _tokenProvider = tokenProvider;
-    }
-
-    public MsClientPrincipal MsClientPrincipal { get; set; }
+    public MsClientPrincipal? ClientPrincipal { get; set; }
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         ClaimsIdentity identity = null;
 
-        if (MsClientPrincipal is not null)
-//        if (headers.TryGetValue("X-MS-CLIENT-PRINCIPAL", out var base64Principal)) 
+        if (ClientPrincipal is not null)
         {
-//            var clientPrincipal = DeserializeClientPrincipal(_tokenProvider.MsClientPrincipal);
-            
             identity = new ClaimsIdentity(
-                MsClientPrincipal.Claims.Select(x => new Claim(x.Type, x.Value)),
-                MsClientPrincipal.AuthenticationType,
-                MsClientPrincipal.NameType,
-                MsClientPrincipal.RoleType);
+                ClientPrincipal.Claims.Select(x => new Claim(x.Type, x.Value)),
+                ClientPrincipal.AuthenticationType,
+                ClientPrincipal.NameType,
+                ClientPrincipal.RoleType);
         }
         else
         {
             identity = new ClaimsIdentity();
         }
 
-
-        var user = new ClaimsPrincipal(identity);
-
-        return Task.FromResult(new AuthenticationState(user));
-    }
-
-    private MsClientPrincipal DeserializeClientPrincipal(string base64Principal)
-    {
-        var decodedBytes = Convert.FromBase64String(base64Principal);
-        var decodedJson = Encoding.UTF8.GetString(decodedBytes);
-
-        return JsonSerializer.Deserialize<MsClientPrincipal>(decodedJson);
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        return Task.FromResult(new AuthenticationState(claimsPrincipal));
     }
 }
 

@@ -19,12 +19,12 @@
 @code {
 
     [Parameter]
-    public InitialApplicationState InitialState { get; set; }
+    public MsClientPrincipal? ClientPrincipal { get; set; }
 
     protected override Task OnInitializedAsync()
     {
         var easyAuthStateProvider = (EasyAuthStateProvider)AuthenticationStateProvider;
-        easyAuthStateProvider.MsClientPrincipal = InitialState.MsClientPrincipal;
+        easyAuthStateProvider.ClientPrincipal = ClientPrincipal;
 
         return base.OnInitializedAsync();
     }

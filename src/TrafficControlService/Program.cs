@@ -29,5 +29,15 @@ app.UseCloudEvents();
 app.MapControllers();
 app.MapActorsHandlers();
 
+app.MapGet("/entrycam", async (VehicleRegistered msg) =>
+{
+    var actorId = new ActorId(msg.LicenseNumber);
+    var proxy = ActorProxy.Create<IVehicleActor>(actorId, nameof(VehicleActor));
+
+    await proxy.RegisterEntryAsync(msg);
+
+    return Results.Ok();
+});
+
 // let's go!
 app.Run();

@@ -15,6 +15,7 @@ public class VehicleActor : Actor, IVehicleActor, IRemindable
 
     public async Task RegisterEntryAsync(VehicleRegistered msg)
     {
+        // TODO See what happens if we don't catch
         try
         {
             Logger.LogInformation($"ENTRY detected in lane {msg.Lane} at " +
