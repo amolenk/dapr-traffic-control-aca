@@ -47,11 +47,28 @@ app.MapSubscribeHandler();
 
 // Configure routes
 
-app.MapPost("/finecalculated", async (FineCalculated fineCalculated, ILogger<Program> logger) =>
+app.MapPost("/finecalculated", async (FineCalculated msg, FineDbContext dbContext, ILogger<Program> logger) =>
 {
-    logger.LogWarning("Got a fine: " + fineCalculated.Id + " - " + fineCalculated.VehicleId);
+    var fine = new Fine(
+        msg.Id,
+        msg.Amount,
+        msg.VehicleId,
+        msg.RoadId,
+        msg.VehicleBrand,
+        msg.VehicleModel,
+        msg.ViolationInKmh,
+        msg.Timestamp);
 
-    await Task.Yield();
+    dbContext.Add(fine);
+
+    try
+    {
+        await dbContext.SaveChangesAsync();
+    }
+    catch (UniqueConstraintException)
+    {
+        // Fine already exists in DB, must be duplicate message.
+    }
 
     return Results.Ok();
 })

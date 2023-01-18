@@ -1,16 +1,16 @@
 ﻿@page "/fetchdata"
 @attribute [Authorize]
 
-<PageTitle>Weather forecast</PageTitle>
+<PageTitle>Speeding fines</PageTitle>
 
 @using TrafficControlUI.Data
-@inject WeatherForecastService ForecastService
+@inject FineDbContext _fineDbContext
 
-<h1>Weather forecast</h1>
+<h1>Speeding. Caught. Monies 💰</h1>
 
-<p>This component demonstrates fetching data from a service.</p>
+<p>10 most recent delinquent speedsters (@(_countdown == 0 ? "refreshing..." : $"refreshing in {_countdown} sec")):</p>
 
-@if (forecasts == null)
+@if (_fines == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -20,30 +20,68 @@ else
         <thead>
             <tr>
                 <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
+                <th>Vehicle</th>
+                <th>Violation (KM/h)</th>
+                <th>Amount</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+            @foreach (var fine in _fines)
             {
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <td>@fine.Timestamp.ToString()</td>
+                    <td>@fine.VehicleId</td>
+                    <td>@((int)fine.ViolationInKmh)</td>
+                    <td>@(fine.Amount == 0 ? "(TBD by prosecutor)" : $"€ {fine.Amount}")</td>
                 </tr>
             }
         </tbody>
     </table>
 }
 
+<p>Total fine amount: € @_totalFineAmount.ToString("N2")</p>
+<p>Funds available for office christmas party: € @((_totalFineAmount * 0.15M).ToString("N2")) 🥳🎄</p>
+
 @code {
-    private WeatherForecast[] forecasts;
+
+    private const int REFRESH_INTERVAL = 3;
+
+    private List<Fine> _fines;
+    private decimal _totalFineAmount;
+
+    private int _countdown = REFRESH_INTERVAL;
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await ForecastService.GetForecastAsync(DateTime.Now);
+        await LoadRecentFinesAsync();
+
+        var timer = new Timer(new TimerCallback(_ =>
+        {
+            if (_countdown == 0)
+            {
+                InvokeAsync(LoadRecentFinesAsync);
+                _countdown = REFRESH_INTERVAL;
+            }
+            else
+            {
+                _countdown -= 1;
+            }
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+            });
+        }), null, 1000, 1000);
+    }
+
+    private async Task LoadRecentFinesAsync()
+    {
+        _fines = await _fineDbContext.Fines
+            .OrderByDescending(f => f.Timestamp)
+            .Take(10)
+            .ToListAsync();
+
+        _totalFineAmount = await _fineDbContext.Fines
+            .SumAsync(f => f.Amount);
     }
 }
