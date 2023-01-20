@@ -71,7 +71,7 @@ app.MapPost("/exitcam", async (VehicleRegistered msg, ISpeedingViolationCalculat
         logger.LogInformation($"Speeding violation detected ({violation} KMh) for vehicle" +
             $" with license-number {state.Value.LicenseNumber}.");
 
-        var speedingViolation = new SpeedingViolationDetected
+        var SpeedingViolationDetected = new SpeedingViolationDetected
         {
             Id = $"{msg.LicenseNumber}@{state.Value.ExitTimestamp.Value:s}",
             VehicleId = msg.LicenseNumber,
@@ -81,7 +81,10 @@ app.MapPost("/exitcam", async (VehicleRegistered msg, ISpeedingViolationCalculat
         };
 
         // publish speedingviolation
-        await daprClient.PublishEventAsync("pubsub", "speedingviolations", speedingViolation);
+        await daprClient.PublishEventAsync(
+            "pubsub",
+            "speedingviolations",
+            SpeedingViolationDetected);
     }
 
     return Results.Ok();

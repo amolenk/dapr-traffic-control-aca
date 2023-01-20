@@ -16,8 +16,9 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-06-01-
         }
       ]
       scopes: [
-        'trafficcontrolservice'
         'finecollectionservice'
+        'trafficcontrolservice'
+        'trafficcontrolui'
       ]
     }
   }

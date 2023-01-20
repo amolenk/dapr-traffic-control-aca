@@ -1,196 +1,64 @@
 param location string = resourceGroup().location
-param uniqueSeed string = '${resourceGroup().id}-${deployment().name}'
+param uniqueSeed string = '${resourceGroup().id}-eshopondapr'
+
+param deployInfra bool = true
+param deployApps bool = true
+
+param sqlAdministratorLogin string = 'server_admin'
 
 @secure()
-param sqlAdministratorLoginPassword string
+param sqlAdministratorLoginPassword string = ''
 
-param authClientId string
+param authClientId string = ''
 @secure()
-param authClientSecret string
+param authClientSecret string = ''
 
-////////////////////////////////////////////////////////////////////////////////
-// Infrastructure
-////////////////////////////////////////////////////////////////////////////////
+param appInsightsName string = 'appinsights-${uniqueString(uniqueSeed)}'
+param containerAppsEnvironmentName string = 'containerappenv-${uniqueString(uniqueSeed)}'
+param cosmosAccountName string = 'cosmos-${uniqueString(uniqueSeed)}'
+param cosmosCollectionName string = 'VehicleState'
+param cosmosDbName string = 'TrafficControl'
+param keyVaultName string = 'keyvault-${uniqueString(uniqueSeed)}'
+param logAnalyticsWorkspaceName string = 'loganalytics-${uniqueString(uniqueSeed)}'
+param managedIdentityName string = 'identity-${uniqueString(uniqueSeed)}'
+param serviceBusName string = 'sb-${uniqueString(uniqueSeed)}'
+param sqlServerName string = 'sql-${uniqueString(uniqueSeed)}'
+param virtualNetworkName string = 'vnet-${uniqueString(uniqueSeed)}'
 
-module managedIdentity 'modules/infra/managed-identity.bicep' = {
-  name: '${deployment().name}-infra-managed-identity'
+module infra 'infra.bicep' = if (deployInfra) {
+  name: '${deployment().name}-infra'
   params: {
     location: location
     uniqueSeed: uniqueSeed
-  }
-}
-
-module virtualNetwork 'modules/infra/virtual-network.bicep' = {
-  name: '${deployment().name}-infra-vnet'
-  params: {
-    location: location
-    uniqueSeed: uniqueSeed
-  }
-}
-
-module containerAppsEnvironment 'modules/infra/container-apps-env.bicep' = {
-  name: '${deployment().name}-infra-container-app-env'
-  params: {
-    location: location
-    uniqueSeed: uniqueSeed
-    vnetName: virtualNetwork.outputs.vnetName
-    infraSubnetName: virtualNetwork.outputs.infraSubnetName
-  }
-}
-
-module keyVault 'modules/infra/key-vault.bicep' = {
-  name: '${deployment().name}-infra-key-vault'
-  params: {
-    location: location
-    uniqueSeed: uniqueSeed
-    managedIdentityName: managedIdentity.outputs.managedIdentityName
-  }
-}
-
-module cosmosDb 'modules/infra/cosmos-db.bicep' = {
-  name: '${deployment().name}-infra-cosmos-db'
-  params: {
-    location: location
-    uniqueSeed: uniqueSeed
-    keyVaultName: keyVault.outputs.keyVaultName
-  }
-}
-
-module serviceBus 'modules/infra/service-bus.bicep' = {
-  name: '${deployment().name}-infra-service-bus'
-  params: {
-    location: location
-    uniqueSeed: uniqueSeed
-    keyVaultName: keyVault.outputs.keyVaultName
-  }
-}
-
-module sqlServer 'modules/infra/sql-server.bicep' = {
-  name: '${deployment().name}-infra-sql-server'
-  params: {
-    location: location
-    uniqueSeed: uniqueSeed
+    appInsightsName: appInsightsName
+    containerAppsEnvironmentName: containerAppsEnvironmentName
+    cosmosAccountName: cosmosAccountName
+    keyVaultName: keyVaultName
+    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
+    managedIdentityName:managedIdentityName
+    serviceBusName: serviceBusName
+    sqlServerName: sqlServerName
+    virtualNetworkName: virtualNetworkName
     sqlAdministratorLoginPassword: sqlAdministratorLoginPassword
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Dapr components
-////////////////////////////////////////////////////////////////////////////////
-
-module daprSecretStore 'modules/dapr/secretstore.bicep' = {
-  name: '${deployment().name}-dapr-secretstore'
-  params: {
-    containerAppsEnvironmentName: containerAppsEnvironment.outputs.name
-    managedIdentityName: managedIdentity.outputs.managedIdentityName
-    vaultName: keyVault.outputs.keyVaultName
-  }
-}
-
-module daprStateStore 'modules/dapr/statestore.bicep' = {
-  name: '${deployment().name}-dapr-statestore'
-  params: {
-    containerAppsEnvironmentName: containerAppsEnvironment.outputs.name
-    cosmosUrl: cosmosDb.outputs.cosmosUrl
-    cosmosDbName: cosmosDb.outputs.cosmosDbName
-    cosmosCollectionName: cosmosDb.outputs.cosmosCollectionName
-  }
-}
-
-module daprPubSub 'modules/dapr/pubsub.bicep' = {
-  name: '${deployment().name}-dapr-pubsub'
-  params: {
-    containerAppsEnvironmentName: containerAppsEnvironment.outputs.name
-  }
-}
-
-module daprEntryCamBinding 'modules/dapr/entrycam.bicep' = {
-  name: '${deployment().name}-dapr-entrycam'
-  params: {
-    containerAppsEnvironmentName: containerAppsEnvironment.outputs.name
-    mqttHost: mosquitto.outputs.mqttHost
-    mqttPort: mosquitto.outputs.mqttPort
-  }
-}
-
-module daprExitCamBinding 'modules/dapr/exitcam.bicep' = {
-  name: '${deployment().name}-dapr-exitcam'
-  params: {
-    containerAppsEnvironmentName: containerAppsEnvironment.outputs.name
-    mqttHost: mosquitto.outputs.mqttHost
-    mqttPort: mosquitto.outputs.mqttPort
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Container apps
-////////////////////////////////////////////////////////////////////////////////
-
-module mosquitto 'modules/infra/mosquitto.bicep' = {
-  name: '${deployment().name}-infra-mosquitto'
+module apps 'apps.bicep' = if (deployApps) {
+  name: '${deployment().name}-apps'
   params: {
     location: location
-    containerAppsEnvironmentId: containerAppsEnvironment.outputs.id
-  }
-}
-
-module trafficControlService 'modules/apps/trafficcontrolservice.bicep' = {
-  name: '${deployment().name}-app-trafficcontrol'
-  dependsOn: [
-    daprEntryCamBinding
-    daprExitCamBinding
-    daprPubSub
-    daprSecretStore
-    daprStateStore
-  ]
-  params: {
-    location: location
-    containerAppsEnvironmentId: containerAppsEnvironment.outputs.id
-    managedIdentityName: managedIdentity.outputs.managedIdentityName
-  }
-}
-
-// module vehicleRegistrationService 'modules/apps/vehicleregistrationservice.bicep' = {
-//   name: '${deployment().name}-app-vehicleregistration'
-//   dependsOn: [
-//     daprSecretStore
-//   ]
-//   params: {
-//     location: location
-//     containerAppsEnvironmentId: containerAppsEnvironment.outputs.id
-//     managedIdentityName: managedIdentity.outputs.managedIdentityName
-//   }
-// }
-
-module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
-  name: '${deployment().name}-app-finecollection'
-  dependsOn: [
-    daprSecretStore
-  ]
-  params: {
-    location: location
-    containerAppsEnvironmentId: containerAppsEnvironment.outputs.id
-    managedIdentityName: managedIdentity.outputs.managedIdentityName
-    keyVaultName: keyVault.outputs.keyVaultName
-    sqlServerName: sqlServer.outputs.sqlServerName
-    sqlAdministratorLogin: sqlServer.outputs.sqlAdministratorLogin
+    authClientId: authClientId
+    authClientSecret: authClientSecret
+    containerAppsEnvironmentName: containerAppsEnvironmentName
+    cosmosAccountName: cosmosAccountName
+    cosmosCollectionName: cosmosCollectionName
+    cosmosDbName: cosmosDbName
+    keyVaultName: keyVaultName
+    managedIdentityName:managedIdentityName
+    sqlServerName: sqlServerName
+    sqlAdministratorLogin: sqlAdministratorLogin
     sqlAdministratorLoginPassword: sqlAdministratorLoginPassword
   }
 }
 
-// module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
-//   name: '${deployment().name}-app-ui'
-//   dependsOn: [
-//     daprSecretStore
-//     sqlServer
-//   ]
-//   params: {
-//     location: location
-//     containerAppsEnvironmentId: containerAppsEnvironment.outputs.id
-//     managedIdentityName: managedIdentity.outputs.managedIdentityName
-//     authClientId: authClientId
-//     authClientSecret: authClientSecret
-//   }
-// }
-
-output containerAppsEnvironmentDomain string = containerAppsEnvironment.outputs.domain
+output containerAppsEnvironmentDomain string = infra.outputs.containerAppsEnvironmentDomain

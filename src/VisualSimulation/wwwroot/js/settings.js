@@ -4,8 +4,8 @@ import { HttpTrafficControlService } from './trafficcontrolsvc-http.js';
 
 export const Settings =
 {
-    trafficControlService: new MqttTrafficControlService('127.0.0.1', 9001),
-    //trafficControlService: new HttpTrafficControlService('http://127.0.0.1:5000'),
+//    trafficControlService: new MqttTrafficControlService('127.0.0.1', 9001),
+    trafficControlService: new HttpTrafficControlService('https://simulationgateway.lemonocean-f90a5010.westeurope.azurecontainerapps.io'),
     laneCount: 5,
     carCount: 15,
     carTypes:

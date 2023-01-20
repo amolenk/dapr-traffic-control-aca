@@ -9,13 +9,13 @@ export class HttpTrafficControlService {
     registerVehicleEntry(car) {
         console.log(`entry cam: ${car.id}`);
         const request = this.createRequest(car);
-        fetch(this.baseUrl + '/entrycam', request);
+        fetch(this.baseUrl + '/api/entry', request);
     }
 
     registerVehicleExit(car) {
         console.log(`exit cam: ${car.id}`);
         const request = this.createRequest(car);
-        fetch(this.baseUrl + '/exitcam', request);
+        fetch(this.baseUrl + '/api/exit', request);
     }
 
     createRequest(car) {

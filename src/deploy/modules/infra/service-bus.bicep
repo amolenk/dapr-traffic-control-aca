@@ -1,9 +1,11 @@
 param location string
 param uniqueSeed string
+param serviceBusName string = 'sb-${uniqueString(uniqueSeed)}'
+
 param keyVaultName string
 
 resource serviceBus 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' = {
-  name: 'sb-${uniqueString(uniqueSeed)}'
+  name: serviceBusName
   location: location
   sku: {
     name: 'Standard'

@@ -30,10 +30,6 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-06-01-
           name: 'collection'
           value: cosmosCollectionName
         }
-        {
-          name: 'actorStateStore'
-          value: 'true'
-        }
       ]
       scopes: [
         'trafficcontrolservice'
