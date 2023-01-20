@@ -62,11 +62,28 @@ app.MapPost("/speedingviolation", async (
     // log fine
     logger.LogInformation($"Calculated fine amount for speeding ticket {fineCalculated.Id}.");
 
-    await daprClient.PublishEventAsync("pubsub", "finecalculated", fineCalculated);
+    await daprClient.PublishEventAsync("pubsub", "fines", fineCalculated);
 
     return Results.Ok();
 })
 .WithTopic("pubsub", "speedingviolations");
+
+app.MapPost("/finecalculated", async (FineCalculated msg, DaprClient daprClient) =>
+{
+    var body = EmailUtils.CreateEmailBody(msg);
+
+    var metadata = new Dictionary<string, string>
+    {
+        ["emailFrom"] = "noreply@cfca.gov",
+        ["emailTo"] = fineCalculated.VehicleOwnerEmail,
+        ["subject"] = $"Speeding violation on {fineCalculated.RoadId}"
+    };
+
+    await _daprClient.InvokeBindingAsync("sendmail", "create", body, metadata);
+
+    return Results.Ok();
+})
+.WithTopic("pubsub", "fines");
 
 // let's go!
 app.Run();

@@ -2,11 +2,11 @@ namespace FineCollectionService.Helpers;
 
 public class EmailUtils
 {
-    public static string CreateEmailBody(
-        SpeedingViolation speedingViolation,
-        VehicleInfo vehicleInfo,
-        string fine)
+    public static string CreateEmailBody(FineCalculated fineCalculated)
     {
+        // log fine
+        string fine = fineCalculated.Amount == 0 ? "tbd by the prosecutor" : $"{fineCalculated.Amount} Euro";
+
         return $@"
                 <html>
                     <head>
@@ -70,7 +70,7 @@ public class EmailUtils
 						</div>
                         <p>The Hague, {DateTime.Now.ToLongDateString()}</p>
                         
-                        <p>Dear Mr. / Miss / Mrs. {vehicleInfo.OwnerName},</p>
+                        <p>Dear Mr. / Miss / Mrs. {fineCalculated.VehicleOwnerName},</p>
                         
                         <p>We hereby inform you of the fact that a speeding violation was detected with a 
                         vehicle that is registered to you.</p>
@@ -86,25 +86,25 @@ public class EmailUtils
                         <p>
                             <b>Vehicle information:</b>
                             <table>
-                                <tr><th>License number</th><td>{vehicleInfo.VehicleId}</td></tr>
-                                <tr><th>Brand</th><td>{vehicleInfo.Brand}</td></tr>
-                                <tr><th>Model</th><td>{vehicleInfo.Model}</td></tr>
+                                <tr><th>License number</th><td>{fineCalculated.VehicleId}</td></tr>
+                                <tr><th>Brand</th><td>{fineCalculated.VehicleBrand}</td></tr>
+                                <tr><th>Model</th><td>{fineCalculated.VehicleModel}</td></tr>
                             </table>
                         </p>
 
                         <p>
                             <b>Conditions during the violation:</b>
                             <table>
-                                <tr><th>Road</th><td>{speedingViolation.RoadId}</td></tr>
-                                <tr><th>Date</th><td>{speedingViolation.Timestamp.ToString("dd-MM-yyyy")}</td></tr>
-                                <tr><th>Time of day</th><td>{speedingViolation.Timestamp.ToString("hh:mm:ss")}</td></tr>
+                                <tr><th>Road</th><td>{fineCalculated.RoadId}</td></tr>
+                                <tr><th>Date</th><td>{fineCalculated.Timestamp.ToString("dd-MM-yyyy")}</td></tr>
+                                <tr><th>Time of day</th><td>{fineCalculated.Timestamp.ToString("hh:mm:ss")}</td></tr>
                             </table>							
                         </p>
 						
                         <p>
                             <b>Sanction:</b>
                             <table>
-                                <tr><th>Maximum speed violation</th><td>{speedingViolation.ViolationInKmh} KMh</td></tr>
+                                <tr><th>Maximum speed violation</th><td>{fineCalculated.ViolationInKmh} KMh</td></tr>
                                 <tr><th>Sanction amount</th><td><div class='fine'>{fine}</div></td></tr>
                             </table>							
                         </p>		
