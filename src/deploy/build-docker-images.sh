@@ -3,3 +3,5 @@ docker build --tag amolenk/dapr-trafficcontrol-trafficcontrolservice:latest ../T
 docker build --tag amolenk/dapr-trafficcontrol-finecollectionservice:latest ../FineCollectionService
 docker build --tag amolenk/dapr-trafficcontrol-vehicleregistrationservice:latest ../VehicleRegistrationService
 docker build --tag amolenk/dapr-trafficcontrol-ui:latest ../TrafficControlUI
+docker build --tag amolenk/dapr-trafficcontrol-simulationgateway:latest ../SimulationGateway
+
