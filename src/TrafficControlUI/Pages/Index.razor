@@ -1,87 +1,11 @@
 ﻿@page "/"
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthenticationStateProvider
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Traffic Control</PageTitle>
+
+<img id="hero" src="img/cops.webp" />
 
 <AuthorizeView>
     <Authorized>
-        Hello, @context.User.Identity?.Name!
+        <h2>Hello, officer @context.User.Identity?.Name!</h2>
     </Authorized>
-    <NotAuthorized>
-        NOT AUTHORIZED
-    </NotAuthorized>
 </AuthorizeView>
-
-<h2>Headers</h2>
-
-@* <ul>
-@foreach (var header in HttpContextAccessor.HttpContext.Request.Headers)
-{
-    @try
-    {
-    <li>@header.Key = @header.Value</li>        
-    }
-    catch (System.Exception)
-    {
-    }
-}
-</ul> *@
-
-<h2>ClaimsPrincipal Data</h2>
-
-<button @onclick="GetClaimsPrincipalData">Get ClaimsPrincipal Data</button>
-
-<p>@authMessage</p>
-
-@if (claims.Count() > 0)
-{
-    <ul>
-        @foreach (var claim in claims)
-        {
-            <li>@claim.Type: @claim.Value</li>
-        }
-    </ul>
-}
-
-<p>@surnameMessage</p>
-
-
-<h2>Environment Variables</h2>
-
-@foreach (var item in GetEnvironmentVariables())
-{
-    <li>@item.Key = @item.Value</li>
-}
-
-@code
-{
-    IEnumerable<System.Collections.DictionaryEntry> GetEnvironmentVariables() =>
-        Environment.GetEnvironmentVariables()
-            .Cast<System.Collections.DictionaryEntry>()
-            .OrderBy(item => item.Key);
-
-
-    private string authMessage;
-    private string surnameMessage;
-    private IEnumerable<Claim> claims = Enumerable.Empty<Claim>();
-
-    private async Task GetClaimsPrincipalData()
-    {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity.IsAuthenticated)
-        {
-            authMessage = $"{user.Identity.Name} is authenticated.";
-            claims = user.Claims;
-            surnameMessage = 
-                $"Surname: {user.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value}";
-        }
-        else
-        {
-            authMessage = "The user is NOT authenticated.";
-        }
-    }
-}

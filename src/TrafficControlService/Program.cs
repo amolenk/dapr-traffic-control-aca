@@ -3,23 +3,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDaprClient();
 
-builder.Services.AddControllers();
-
 builder.Services.AddSingleton<ISpeedingViolationCalculator>(
     new DefaultSpeedingViolationCalculator("A12", 10, 100, 5));
 
 var app = builder.Build();
-
-// configure web-app
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
-
-app.UseCloudEvents();
-
-// configure routing
-app.MapControllers();
 
 // Endpoints
 app.MapPost("/entrycam", async (VehicleRegistered msg, DaprClient daprClient, ILogger<Program> logger) =>

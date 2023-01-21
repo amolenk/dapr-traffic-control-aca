@@ -12,17 +12,7 @@ builder.Configuration.AddDaprSecretStore(
 
 builder.Services.AddSingleton<IFineCalculator, HardCodedFineCalculator>();
 
-builder.Services.AddSingleton<VehicleRegistrationServiceClient>(_ =>
-    new VehicleRegistrationServiceClient(DaprClient.CreateInvokeHttpClient(
-        "vehicleregistrationservice")));
-
 var app = builder.Build();
-
-// configure web-app
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
 
 app.UseCloudEvents();
 app.MapSubscribeHandler();

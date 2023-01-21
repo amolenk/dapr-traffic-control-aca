@@ -3,7 +3,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDaprClient();
 
+builder.Services.AddCors();
+
 var app = builder.Build();
+
+app.UseCors(builder =>
+{
+    builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader();
+});
 
 // Configure routes
 

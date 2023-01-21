@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>TrafficControlUI</PageTitle>
+<PageTitle>Traffic Control</PageTitle>
 
 <div class="page">
     <div class="sidebar">
@@ -9,12 +9,18 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="/.auth/login/aad?post_login_redirect_uri=/">Log in</a>
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            <AuthorizeView>
+                <Authorized>
+                    <a href="/.auth/logout">Log out</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/.auth/login/aad?post_login_redirect_uri=/">Log in</a>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
 
-        <article class="content px-4">
+        <div>
             @Body
-        </article>
+        </div>
     </main>
 </div>

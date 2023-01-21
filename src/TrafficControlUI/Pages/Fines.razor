@@ -1,0 +1,89 @@
+﻿@page "/fines"
+@attribute [Authorize]
+
+<PageTitle>Traffic Control - Speeding fines</PageTitle>
+
+@using TrafficControlUI.Data
+@inject FineDbContext _fineDbContext
+
+<article class="content">
+    <h1>Speeding. Caught. Monies 💰</h1>
+
+    <p>10 most recent delinquent speedsters (@(_countdown == 0 ? "refreshing..." : $"refreshing in {_countdown} sec")):</p>
+
+    @if (_fines == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Vehicle</th>
+                    <th>Violation (KM/h)</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var fine in _fines)
+                {
+                    <tr>
+                        <td>@fine.Timestamp.ToString()</td>
+                        <td>@fine.VehicleId</td>
+                        <td>@((int)fine.ViolationInKmh)</td>
+                        <td>@(fine.Amount == 0 ? "(TBD by prosecutor)" : $"€ {fine.Amount}")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <p>Total fine amount: € @_totalFineAmount.ToString("N2")</p>
+    <p>Funds available for office christmas party: € @((_totalFineAmount * 0.15M).ToString("N2")) 🥳🎄</p>
+</article>
+
+@code {
+
+    private const int REFRESH_INTERVAL = 3;
+
+    private List<Fine> _fines;
+    private decimal _totalFineAmount;
+
+    private int _countdown = REFRESH_INTERVAL;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecentFinesAsync();
+
+        var timer = new Timer(new TimerCallback(_ =>
+        {
+            if (_countdown == 0)
+            {
+                InvokeAsync(LoadRecentFinesAsync);
+                _countdown = REFRESH_INTERVAL;
+            }
+            else
+            {
+                _countdown -= 1;
+            }
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+            });
+        }), null, 1000, 1000);
+    }
+
+    private async Task LoadRecentFinesAsync()
+    {
+        _fines = await _fineDbContext.Fines
+            .OrderByDescending(f => f.Timestamp)
+            .Take(10)
+            .ToListAsync();
+
+        _totalFineAmount = await _fineDbContext.Fines
+            .SumAsync(f => f.Amount);
+    }
+}

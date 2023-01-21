@@ -1,9 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.Authorization;
-using TrafficControlUI;
-using TrafficControlUI.Data;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -15,12 +9,9 @@ builder.Configuration.AddDaprSecretStore(
     new DaprClientBuilder().Build(),
     new string[] { "--" });
 
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider, EasyAuthStateProvider>();
-builder.Services.AddSingleton<WeatherForecastService>();
 
 builder.Services.AddDbContext<FineDbContext>(
     options => options.UseSqlServer(builder.Configuration["ConnectionStrings:FineDb"]));
