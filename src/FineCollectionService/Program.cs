@@ -75,11 +75,11 @@ app.MapPost("/finecalculated", async (FineCalculated msg, DaprClient daprClient)
     var metadata = new Dictionary<string, string>
     {
         ["emailFrom"] = "noreply@cfca.gov",
-        ["emailTo"] = fineCalculated.VehicleOwnerEmail,
-        ["subject"] = $"Speeding violation on {fineCalculated.RoadId}"
+        ["emailTo"] = msg.VehicleOwnerEmail,
+        ["subject"] = $"Speeding violation on {msg.RoadId}"
     };
 
-    await _daprClient.InvokeBindingAsync("sendmail", "create", body, metadata);
+    await daprClient.InvokeBindingAsync("sendmail", "create", body, metadata);
 
     return Results.Ok();
 })
