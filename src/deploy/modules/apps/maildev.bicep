@@ -3,7 +3,7 @@ param containerAppsEnvironmentId string
 
 param smtpPort int = 1025
 
-resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
+resource containerApp 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: 'maildev'
   location: location
   properties: {
@@ -31,4 +31,5 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
   }
 }
 
+output smtpHost string = containerApp.name
 output smptPort int = smtpPort

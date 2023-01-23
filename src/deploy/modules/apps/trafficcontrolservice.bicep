@@ -30,7 +30,7 @@ resource containerApp 'Microsoft.App/containerApps@2022-06-01-preview' = {
       }
     }
     configuration: {
-      activeRevisionsMode: 'single'
+      activeRevisionsMode: 'Single'
       dapr: {
         enabled: true
         appId: 'trafficcontrolservice'

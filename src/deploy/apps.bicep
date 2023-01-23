@@ -72,12 +72,29 @@ module daprExitCamBinding 'modules/dapr/exitcam.bicep' = {
   }
 }
 
+module daprSendMailBinding 'modules/dapr/sendmail.bicep' = {
+  name: '${deployment().name}-dapr-sendmail'
+  params: {
+    containerAppsEnvironmentName: containerAppsEnvironmentName
+    smtpHost: maildev.outputs.smtpHost
+    smtpPort: maildev.outputs.smptPort
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Container apps
 ////////////////////////////////////////////////////////////////////////////////
 
-module mosquitto 'modules/infra/mosquitto.bicep' = {
+module mosquitto 'modules/apps/mosquitto.bicep' = {
   name: '${deployment().name}-infra-mosquitto'
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppsEnvironment.id
+  }
+}
+
+module maildev 'modules/apps/maildev.bicep' = {
+  name: '${deployment().name}-infra-maildev'
   params: {
     location: location
     containerAppsEnvironmentId: containerAppsEnvironment.id
@@ -115,7 +132,9 @@ module vehicleRegistrationService 'modules/apps/vehicleregistrationservice.bicep
 module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
   name: '${deployment().name}-app-finecollection'
   dependsOn: [
+    daprPubSub
     daprSecretStore
+    daprSendMailBinding
   ]
   params: {
     location: location
@@ -131,6 +150,7 @@ module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
 module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
   name: '${deployment().name}-app-ui'
   dependsOn: [
+    daprPubSub
     daprSecretStore
   ]
   params: {
@@ -145,6 +165,8 @@ module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
 module simulationGateway 'modules/apps/simulationgateway.bicep' = {
   name: '${deployment().name}-app-simgw'
   dependsOn: [
+    daprEntryCamBinding
+    daprExitCamBinding
     daprSecretStore
   ]
   params: {

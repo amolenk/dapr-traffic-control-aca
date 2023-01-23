@@ -1,6 +1,3 @@
-
-
-
 namespace TrafficControlUI;
 
 public class EasyAuthStateProvider : AuthenticationStateProvider
