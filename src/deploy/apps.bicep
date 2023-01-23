@@ -47,24 +47,15 @@ module daprStateStore 'modules/dapr/statestore.bicep' = {
   }
 }
 
-module daprPubSub 'modules/dapr/pubsub.bicep' = {
-  name: '${deployment().name}-dapr-pubsub'
+module daprPubSubServiceBus 'modules/dapr/pubsub-sb.bicep' = {
+  name: '${deployment().name}-dapr-pubsub-sb'
   params: {
     containerAppsEnvironmentName: containerAppsEnvironmentName
   }
 }
 
-module daprEntryCamBinding 'modules/dapr/entrycam.bicep' = {
-  name: '${deployment().name}-dapr-entrycam'
-  params: {
-    containerAppsEnvironmentName: containerAppsEnvironmentName
-    mqttHost: mosquitto.outputs.mqttHost
-    mqttPort: mosquitto.outputs.mqttPort
-  }
-}
-
-module daprExitCamBinding 'modules/dapr/exitcam.bicep' = {
-  name: '${deployment().name}-dapr-exitcam'
+module daprPubSubCameras 'modules/dapr/pubsub-cameras.bicep' = {
+  name: '${deployment().name}-dapr-pubsub-cam'
   params: {
     containerAppsEnvironmentName: containerAppsEnvironmentName
     mqttHost: mosquitto.outputs.mqttHost
@@ -104,9 +95,8 @@ module maildev 'modules/apps/maildev.bicep' = {
 module trafficControlService 'modules/apps/trafficcontrolservice.bicep' = {
   name: '${deployment().name}-app-trafficcontrol'
   dependsOn: [
-    daprEntryCamBinding
-    daprExitCamBinding
-    daprPubSub
+    daprPubSubCameras
+    daprPubSubServiceBus
     daprSecretStore
     daprStateStore
   ]
@@ -132,7 +122,7 @@ module vehicleRegistrationService 'modules/apps/vehicleregistrationservice.bicep
 module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
   name: '${deployment().name}-app-finecollection'
   dependsOn: [
-    daprPubSub
+    daprPubSubServiceBus
     daprSecretStore
     daprSendMailBinding
   ]
@@ -150,7 +140,7 @@ module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
 module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
   name: '${deployment().name}-app-ui'
   dependsOn: [
-    daprPubSub
+    daprPubSubServiceBus
     daprSecretStore
   ]
   params: {
@@ -165,8 +155,7 @@ module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
 module simulationGateway 'modules/apps/simulationgateway.bicep' = {
   name: '${deployment().name}-app-simgw'
   dependsOn: [
-    daprEntryCamBinding
-    daprExitCamBinding
+    daprPubSubCameras
     daprSecretStore
   ]
   params: {
