@@ -58,7 +58,9 @@ app.MapPost("/speedingviolation", async (
 })
 .WithTopic("pubsub-sb", "speedingviolations");
 
-app.MapPost("/finecalculated", async (FineCalculated msg, DaprClient daprClient) =>
+app.MapPost("/finecalculated", async (
+    FineCalculated msg,
+    DaprClient daprClient) =>
 {
     var body = EmailUtils.CreateEmailBody(msg);
 
