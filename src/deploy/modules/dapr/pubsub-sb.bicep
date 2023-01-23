@@ -4,7 +4,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-06-01-
   name: containerAppsEnvironmentName
 
   resource daprComponent 'daprComponents@2022-06-01-preview' = {
-    name: 'pubsub'
+    name: 'pubsub-sb'
     properties: {
       componentType: 'pubsub.azure.servicebus'
       version: 'v1'

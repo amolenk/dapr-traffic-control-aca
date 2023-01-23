@@ -27,7 +27,7 @@ app.MapPost("/entrycam", async (VehicleRegistered msg, DaprClient daprClient, IL
 
     return Results.Ok();
 })
-.WithTopic("pubsub-mqtt", "trafficcontrol/entrycam", true);
+.WithTopic("pubsub-cameras", "trafficcontrol/entrycam", true);
 
 app.MapPost("/exitcam", async (VehicleRegistered msg, ISpeedingViolationCalculator calculator, DaprClient daprClient, ILogger<Program> logger) =>
 {
@@ -72,14 +72,14 @@ app.MapPost("/exitcam", async (VehicleRegistered msg, ISpeedingViolationCalculat
 
         // publish speedingviolation
         await daprClient.PublishEventAsync(
-            "pubsub",
+            "pubsub-sb",
             "speedingviolations",
             SpeedingViolationDetected);
     }
 
     return Results.Ok();
 })
-.WithTopic("pubsub-mqtt", "trafficcontrol/exitcam", true);
+.WithTopic("pubsub-cameras", "trafficcontrol/exitcam", true);
 
 // let's go!
 app.Run();

@@ -63,7 +63,7 @@ app.MapPost("/finecalculated", async (FineCalculated msg, FineDbContext dbContex
 
     return Results.Ok();
 })
-.WithTopic("pubsub", "fines");
+.WithTopic("pubsub-sb", "fines");
 
 // Migrate database
 using var scope = app.Services.CreateScope();
