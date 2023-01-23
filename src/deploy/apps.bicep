@@ -41,21 +41,31 @@ module daprStateStore 'modules/dapr/statestore.bicep' = {
   name: '${deployment().name}-dapr-statestore'
   params: {
     containerAppsEnvironmentName: containerAppsEnvironmentName
+    managedIdentityName: managedIdentityName
     cosmosUrl: cosmosAccount.properties.documentEndpoint
     cosmosDbName: cosmosDbName
     cosmosCollectionName: cosmosCollectionName
   }
 }
 
-module daprPubSubServiceBus 'modules/dapr/pubsub-sb.bicep' = {
-  name: '${deployment().name}-dapr-pubsub-sb'
+module daprPubSub 'modules/dapr/pubsub.bicep' = {
+  name: '${deployment().name}-dapr-pubsub'
   params: {
     containerAppsEnvironmentName: containerAppsEnvironmentName
   }
 }
 
-module daprPubSubCameras 'modules/dapr/pubsub-cameras.bicep' = {
-  name: '${deployment().name}-dapr-pubsub-cam'
+module daprEntryCamBinding 'modules/dapr/entrycam.bicep' = {
+  name: '${deployment().name}-dapr-entrycam'
+  params: {
+    containerAppsEnvironmentName: containerAppsEnvironmentName
+    mqttHost: mosquitto.outputs.mqttHost
+    mqttPort: mosquitto.outputs.mqttPort
+  }
+}
+
+module daprExitCamBinding 'modules/dapr/exitcam.bicep' = {
+  name: '${deployment().name}-dapr-exitcam'
   params: {
     containerAppsEnvironmentName: containerAppsEnvironmentName
     mqttHost: mosquitto.outputs.mqttHost
@@ -95,8 +105,9 @@ module maildev 'modules/apps/maildev.bicep' = {
 module trafficControlService 'modules/apps/trafficcontrolservice.bicep' = {
   name: '${deployment().name}-app-trafficcontrol'
   dependsOn: [
-    daprPubSubCameras
-    daprPubSubServiceBus
+    daprEntryCamBinding
+    daprExitCamBinding
+    daprPubSub
     daprSecretStore
     daprStateStore
   ]
@@ -122,7 +133,7 @@ module vehicleRegistrationService 'modules/apps/vehicleregistrationservice.bicep
 module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
   name: '${deployment().name}-app-finecollection'
   dependsOn: [
-    daprPubSubServiceBus
+    daprPubSub
     daprSecretStore
     daprSendMailBinding
   ]
@@ -140,7 +151,7 @@ module fineCollectionService 'modules/apps/finecollectionservice.bicep' = {
 module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
   name: '${deployment().name}-app-ui'
   dependsOn: [
-    daprPubSubServiceBus
+    daprPubSub
     daprSecretStore
   ]
   params: {
@@ -155,7 +166,8 @@ module trafficControlUI 'modules/apps/trafficcontrolui.bicep' = {
 module simulationGateway 'modules/apps/simulationgateway.bicep' = {
   name: '${deployment().name}-app-simgw'
   dependsOn: [
-    daprPubSubCameras
+    daprEntryCamBinding
+    daprExitCamBinding
     daprSecretStore
   ]
   params: {

@@ -3,7 +3,6 @@ param uniqueSeed string
 param cosmosAccountName string = 'cosmos-${uniqueString(uniqueSeed)}'
 param cosmosDbName string = 'TrafficControl'
 param cosmosCollectionName string = 'VehicleState'
-param keyVaultName string
 
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2021-04-15' = {
   name: cosmosAccountName
@@ -49,17 +48,6 @@ resource cosmosCollection 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
         ]
         kind: 'Hash'
       }
-    }
-  }
-}
-
-resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
-  name: keyVaultName
-
-  resource cosmosKeySecret 'secrets' = {
-    name: 'CosmosDb--PrimaryKey'
-    properties: {
-      value: cosmosAccount.listKeys().primaryMasterKey
     }
   }
 }

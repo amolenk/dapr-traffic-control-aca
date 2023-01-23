@@ -2,15 +2,26 @@
 # Infrastructure
 ######
 
+$resourceGroupName = 'DaprTrafficControlACA'
+
 # Create resource group
-az group create --name DaprTrafficControlACA --location WestEurope
+az group create --name $resourceGroupName --location WestEurope
 
 # Deploy infra resources
-$containerAppsEnvironmentDomain = (az deployment group create `
-    --resource-group DaprTrafficControlACA `
+$outputs = (az deployment group create `
+    --resource-group $resourceGroupName `
     --template-file main.bicep `
     --parameters deployApps=false sqlAdministratorLoginPassword=Pass@word `
-    | ConvertFrom-Json).properties.outputs.containerAppsEnvironmentDomain.value
+    | ConvertFrom-Json).properties.outputs
+
+$containerAppsEnvironmentDomain = $outputs.containerAppsEnvironmentDomain.value
+
+az cosmosdb sql role assignment create `
+    --account-name $outputs.cosmosAccountName.value `
+    --resource-group $resourceGroupName `
+    --role-definition-name "Cosmos DB Built-in Data Contributor" `
+    --scope "/dbs/$($outputs.cosmosDbName.value)/colls/$($outputs.cosmosCollectionName.value)" `
+    --principal-id $outputs.managedIdentityPrincipalId.value
 
 ######
 # Application registrations
@@ -67,7 +78,7 @@ az rest --method PATCH `
 
 # Deploy app resources
 az deployment group create `
-    --resource-group DaprTrafficControlACA `
+    --resource-group $resourceGroupName `
     --template-file main.bicep `
     --parameters deployInfra=false sqlAdministratorLoginPassword=Pass@word authClientId=$applicationClientId authClientSecret=$clientSecret
 

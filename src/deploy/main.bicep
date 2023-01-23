@@ -62,3 +62,7 @@ module apps 'apps.bicep' = if (deployApps) {
 }
 
 output containerAppsEnvironmentDomain string = infra.outputs.containerAppsEnvironmentDomain
+output cosmosAccountName string = infra.outputs.cosmosAccountName
+output cosmosDbName string = infra.outputs.cosmosDbName
+output cosmosCollectionName string = infra.outputs.cosmosCollectionName
+output managedIdentityPrincipalId string = infra.outputs.managedIdentityPrincipalId

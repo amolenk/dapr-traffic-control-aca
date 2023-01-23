@@ -65,7 +65,6 @@ module cosmosDb 'modules/infra/cosmos-db.bicep' = {
     location: location
     uniqueSeed: uniqueSeed
     cosmosAccountName: cosmosAccountName
-    keyVaultName: keyVault.outputs.keyVaultName
   }
 }
 
@@ -90,3 +89,7 @@ module sqlServer 'modules/infra/sql-server.bicep' = {
 }
 
 output containerAppsEnvironmentDomain string = containerAppsEnvironment.outputs.domain
+output cosmosAccountName string = cosmosAccountName
+output cosmosDbName string = cosmosDb.outputs.cosmosDbName
+output cosmosCollectionName string = cosmosDb.outputs.cosmosCollectionName
+output managedIdentityPrincipalId string = managedIdentity.outputs.principalId
