@@ -9,7 +9,10 @@ builder.Services.AddSingleton<ISpeedingViolationCalculator>(
 var app = builder.Build();
 
 // Endpoints
-app.MapPost("/entrycam", async (VehicleRegistered msg, DaprClient daprClient, ILogger<Program> logger) =>
+app.MapPost("/entrycam", async (
+    VehicleRegistered msg,
+    DaprClient daprClient,
+    ILogger<Program> logger) =>
 {
     // log entry
     logger.LogInformation($"ENTRY detected in lane {msg.Lane} at {msg.Timestamp.ToString("hh:mm:ss")} " +
@@ -26,7 +29,11 @@ app.MapPost("/entrycam", async (VehicleRegistered msg, DaprClient daprClient, IL
     return Results.Ok();
 });
 
-app.MapPost("/exitcam", async (VehicleRegistered msg, ISpeedingViolationCalculator calculator, DaprClient daprClient, ILogger<Program> logger) =>
+app.MapPost("/exitcam", async (
+    VehicleRegistered msg,
+    ISpeedingViolationCalculator calculator,
+    DaprClient daprClient,
+    ILogger<Program> logger) =>
 {
     logger.LogInformation($"EXIT detected in lane {msg.Lane} at {msg.Timestamp.ToString("hh:mm:ss")} " +
         $"of vehicle with license-number {msg.LicenseNumber}.");
