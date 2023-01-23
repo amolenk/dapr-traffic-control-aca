@@ -1,7 +1,7 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: pubsub-sb
+  name: pubsub
   namespace: dapr-trafficcontrol
 spec:
   type: pubsub.rabbitmq

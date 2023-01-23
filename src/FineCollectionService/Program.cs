@@ -52,11 +52,11 @@ app.MapPost("/speedingviolation", async (
     // log fine
     logger.LogInformation($"Calculated fine amount for speeding ticket {fineCalculated.Id}.");
 
-    await daprClient.PublishEventAsync("pubsub-sb", "fines", fineCalculated);
+    await daprClient.PublishEventAsync("pubsub", "fines", fineCalculated);
 
     return Results.Ok();
 })
-.WithTopic("pubsub-sb", "speedingviolations");
+.WithTopic("pubsub", "speedingviolations");
 
 app.MapPost("/finecalculated", async (FineCalculated msg, DaprClient daprClient) =>
 {
@@ -73,7 +73,7 @@ app.MapPost("/finecalculated", async (FineCalculated msg, DaprClient daprClient)
 
     return Results.Ok();
 })
-.WithTopic("pubsub-sb", "fines");
+.WithTopic("pubsub", "fines");
 
 // let's go!
 app.Run();

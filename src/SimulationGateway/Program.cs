@@ -19,24 +19,16 @@ app.UseCors(builder =>
 
 app.MapPost("/api/entry", async (VehicleRegistered msg, DaprClient daprClient) =>
 {
-    // Forward to Mosquitto using MQTT pub/sub.
-    await daprClient.PublishEventAsync(
-        "pubsub-cameras",
-        "trafficcontrol/entrycam",
-        msg,
-        new Dictionary<string, string> { ["rawPayload"] = "true" });
+    // Forward to Mosquitto using MQTT output binding.
+    await daprClient.InvokeBindingAsync("entrycam", "create", msg);
 
     return Results.Ok();
 });
 
 app.MapPost("/api/exit", async (VehicleRegistered msg, DaprClient daprClient) =>
 {
-    // Forward to Mosquitto using MQTT pub/sub.
-    await daprClient.PublishEventAsync(
-        "pubsub-cameras",
-        "trafficcontrol/exitcam",
-        msg,
-        new Dictionary<string, string> { ["rawPayload"] = "true" });
+    // Forward to Mosquitto using MQTT output binding.
+    await daprClient.InvokeBindingAsync("exitcam", "create", msg);
 
     return Results.Ok();
 });

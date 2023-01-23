@@ -8,8 +8,6 @@ builder.Services.AddSingleton<ISpeedingViolationCalculator>(
 
 var app = builder.Build();
 
-app.MapSubscribeHandler();
-
 // Endpoints
 app.MapPost("/entrycam", async (VehicleRegistered msg, DaprClient daprClient, ILogger<Program> logger) =>
 {
@@ -26,8 +24,7 @@ app.MapPost("/entrycam", async (VehicleRegistered msg, DaprClient daprClient, IL
         vehicleState);
 
     return Results.Ok();
-})
-.WithTopic("pubsub-cameras", "trafficcontrol/entrycam", true);
+});
 
 app.MapPost("/exitcam", async (VehicleRegistered msg, ISpeedingViolationCalculator calculator, DaprClient daprClient, ILogger<Program> logger) =>
 {
@@ -72,14 +69,13 @@ app.MapPost("/exitcam", async (VehicleRegistered msg, ISpeedingViolationCalculat
 
         // publish speedingviolation
         await daprClient.PublishEventAsync(
-            "pubsub-sb",
+            "pubsub",
             "speedingviolations",
             SpeedingViolationDetected);
     }
 
     return Results.Ok();
-})
-.WithTopic("pubsub-cameras", "trafficcontrol/exitcam", true);
+});
 
 // let's go!
 app.Run();
