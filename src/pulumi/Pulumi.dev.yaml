@@ -1,2 +1,5 @@
 config:
   azure-native:location: WestEurope
+  trafficcontrol:sqlAdministratorLogin: amolenk
+  trafficcontrol:sqlAdministratorLoginPassword:
+    secure: AAABAFzY8d3fxeiqITDDCilETMQKq4hwknVCR5kic2LEqpZqliSmew==

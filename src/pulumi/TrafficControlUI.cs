@@ -3,25 +3,24 @@ using Pulumi;
 using AzureNative = Pulumi.AzureNative;
 using AzureAD = Pulumi.AzureAD;
 using Pulumi.AzureAD;
+using App = Pulumi.AzureNative.App; 
 
 public class TrafficControlUI
 {
     public const string AppName = "traffic-control-ui";
 
-    public Output<string> ApplicationApplicationId { get; set; } = null!;
-    public Output<string> ApplicationPasswordValue { get; set; } = null!;
-//    public Output<string> ApplicationServicePrincipalObjectId { get; set; }
-
-    public TrafficControlUI(string prefix, AzureNative.App.ManagedEnvironment managedEnvironment)
+    public TrafficControlUI(string prefix, Infrastructure infra)
 	{
-        CreateApplicationRegistration(prefix, managedEnvironment.DefaultDomain);
+        var applicationPassword = CreateApplicationRegistration(prefix, infra);
+
+        CreateContainerApp(prefix, infra, applicationPassword);
     }
 
-    private void CreateApplicationRegistration(string prefix, Output<string> appEnvDomain)
+    private AzureAD.ApplicationPassword CreateApplicationRegistration(string prefix, Infrastructure infra)
     {
         var userImpersonationScopeUuid = new Pulumi.Random.RandomUuid($"{prefix}-traffic-control");
 
-        var uiAppUrl = Output.Format($"https://trafficcontrolui.{appEnvDomain}");
+        var uiAppUrl = Output.Format($"https://trafficcontrolui.{infra.ContainerAppsEnvironment.DefaultDomain}");
 
         var application = new AzureAD.Application($"{prefix}-{AppName}", new()
         {
@@ -83,30 +82,28 @@ public class TrafficControlUI
     //    ApplicationId = application.ApplicationId,
     //});
 
-        ApplicationApplicationId = application.ApplicationId;
-        ApplicationPasswordValue = applicationPassword.Value;
-//        ApplicationServicePrincipalObjectId = servicePrincipal.ObjectId;
+        return applicationPassword;
     }
 
-    private void CreateContainerApp(
-        string prefix,
-        AzureNative.Resources.ResourceGroup resourceGroup,
-        AzureNative.App.ManagedEnvironment managedEnvironment,
-        AzureNative.ManagedIdentity.UserAssignedIdentity identity)
+    // TODO usings
+    private void CreateContainerApp(string prefix, Infrastructure infra, AzureAD.ApplicationPassword applicationPassword)
     {
         var app = new AzureNative.App.ContainerApp(AppName, new()
         {
-            ResourceGroupName = resourceGroup.Name,
+            ResourceGroupName = infra.ResourceGroup.Name,
             Identity = new AzureNative.App.Inputs.ManagedServiceIdentityArgs
             {
                 Type = AzureNative.App.ManagedServiceIdentityType.UserAssigned,
-                // TODO Or: https://github.com/pulumi/pulumi-azure-native/issues/812#issuecomment-842456058
-                UserAssignedIdentities =
+                UserAssignedIdentities = infra.ManagedIdentity.Id.Apply(id =>
                 {
-                    { identity.Id.ToString(), new Dictionary<string, object>() }
-                }
+                    var im = new Dictionary<string, object>
+                    {
+                        { id, new Dictionary<string, object>() }
+                    };
+                    return im;
+                })
             },
-            ManagedEnvironmentId = managedEnvironment.Id,
+            ManagedEnvironmentId = infra.ContainerAppsEnvironment.Id,
             Template = new AzureNative.App.Inputs.TemplateArgs
             {
                 Containers = new InputList<AzureNative.App.Inputs.ContainerArgs>
@@ -116,52 +113,36 @@ public class TrafficControlUI
                         Name = AppName,
                         Image = "amolenk/dapr-trafficcontrol-ui:latest"
                     }
+                },
+                Scale = new AzureNative.App.Inputs.ScaleArgs
+                {
+                    MinReplicas = 1,
+                    MaxReplicas = 1
+                }
+            },
+            Configuration = new AzureNative.App.Inputs.ConfigurationArgs
+            {
+                ActiveRevisionsMode = AzureNative.App.ActiveRevisionsMode.Single,
+                Dapr = new AzureNative.App.Inputs.DaprArgs
+                {
+                    Enabled = true,
+                    AppId = AppName, // TODO: Test (was trafficcontrolui in original)
+                    AppPort = 80
+                },
+                Ingress = new AzureNative.App.Inputs.IngressArgs
+                {
+                    External = true,
+                    TargetPort = 80
+                },
+                Secrets = new InputList<AzureNative.App.Inputs.SecretArgs>
+                {
+                    new AzureNative.App.Inputs.SecretArgs
+                    {
+                        Name = "microsoft-provider-authentication-secret",
+                        Value = applicationPassword.Value
+                    }
                 }
             }
         });
-
-
-  //      properties:
-  //          {
-  //          managedEnvironmentId: containerAppsEnvironmentId
-  //          template: {
-  //              containers:
-  //                  [
-  //                {
-  //                  name: 'trafficcontrolui'
-  //                  image: 'amolenk/dapr-trafficcontrol-ui:latest'
-  //                }
-  //    ]
-  //    scale:
-  //                  {
-  //                  minReplicas: 1
-  //      maxReplicas: 1
-  //    }
-  //              }
-  //          configuration:
-  //              {
-  //              activeRevisionsMode: 'single'
-  //            dapr:
-  //                  {
-  //                  enabled: true
-  //      appId: 'trafficcontrolui'
-  //      appPort: 80
-  //    }
-  //              ingress:
-  //                  {
-  //                  external: true
-  //                targetPort: 80
-  //              }
-  //              secrets:
-  //                  [
-  //                {
-  //                  name: 'microsoft-provider-authentication-secret'
-  //                  value: authClientSecret
-  //                }
-  //    ]
-  //  }
-  //          }
-
-        }
     }
-
+}
