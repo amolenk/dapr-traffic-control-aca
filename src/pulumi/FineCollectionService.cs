@@ -1,4 +1,4 @@
-﻿using App = Pulumi.AzureNative.App.V20221001; 
+﻿using App = Pulumi.AzureNative.App; 
 using KeyVault = Pulumi.AzureNative.KeyVault;
 using Sql = Pulumi.AzureNative.Sql;
 
@@ -14,8 +14,6 @@ public class FineCollectionService
         CreateSqlDatabase(infra);
         CreateConnectionStringSecret(infra);
         CreateContainerApp(infra);
-
-        // TODO Add explicit dependency on SqlDatabase
     }
 
     private void CreateSqlDatabase(Infrastructure infra)

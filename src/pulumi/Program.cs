@@ -3,8 +3,6 @@ using Authorization = Pulumi.AzureNative.Authorization;
 
 return await Deployment.RunAsync(async () =>
 {
-    var prefix = "dtc";
-
     var config = new Config();
 
     var sqlAdministratorLogin = config.Require("sqlAdministratorLogin")!;
@@ -26,11 +24,11 @@ return await Deployment.RunAsync(async () =>
     var trafficControlService = new TrafficControlService(infra);
     var vehicleRegistrationService = new VehicleRegistrationService(infra);
     var fineCollectionService = new FineCollectionService(infra);
-    // var trafficControlUI = new TrafficControlUI(prefix, infra);
+    var trafficControlUI = new TrafficControlUI(infra, authorizationResult.SubscriptionId);
     var simulationGateway = new SimulationGateway(infra);
 
     return new Dictionary<string, object?>
     {
-//        ["roleName"] = cosmosStack.sqlRoleDefinition.Apply(x => x.RoleName),
+        ["uiUrl"] = Output.Format($"https://{TrafficControlUI.AppName}.{infra.ContainerAppsEnvironment.DefaultDomain}")
     };
 });

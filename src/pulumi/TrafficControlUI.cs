@@ -1,33 +1,33 @@
-﻿using System;
-using Pulumi;
-using AzureNative = Pulumi.AzureNative;
-using AzureAD = Pulumi.AzureAD;
-using Pulumi.AzureAD;
+﻿using Pulumi;
 using App = Pulumi.AzureNative.App; 
+using AzureAD = Pulumi.AzureAD;
 
 public class TrafficControlUI
 {
-    public const string AppName = "traffic-control-ui";
+    public const string AppName = "trafficcontrolui";
 
-    public TrafficControlUI(string prefix, Infrastructure infra)
+    public AzureAD.Application Application { get; private set; } = null!;
+    public AzureAD.ApplicationPassword ApplicationPassword { get; private set; } = null!;
+    public App.ContainerApp ContainerApp { get; private set; } = null!;
+
+    public TrafficControlUI(Infrastructure infra, string tenantId)
 	{
-        var applicationPassword = CreateApplicationRegistration(prefix, infra);
-
-        CreateContainerApp(prefix, infra, applicationPassword);
+        CreateApplicationRegistration(infra);
+        CreateContainerApp(infra, tenantId);
     }
 
-    private AzureAD.ApplicationPassword CreateApplicationRegistration(string prefix, Infrastructure infra)
+    private void CreateApplicationRegistration(Infrastructure infra)
     {
-        var userImpersonationScopeUuid = new Pulumi.Random.RandomUuid($"{prefix}-traffic-control");
+        var userImpersonationScopeUuid = new Pulumi.Random.RandomUuid("traffic-control");
 
-        var uiAppUrl = Output.Format($"https://trafficcontrolui.{infra.ContainerAppsEnvironment.DefaultDomain}");
+        var uiAppUrl = Output.Format($"https://{AppName}.{infra.ContainerAppsEnvironment.DefaultDomain}");
 
-        var application = new AzureAD.Application($"{prefix}-{AppName}", new()
+        Application = new AzureAD.Application(AppName, new()
         {
             DisplayName = "Dapr Traffic Control UI",
             IdentifierUris =
             {
-                $"api://{prefix}-{AppName}" // In the current demo, the application client id is used here.
+                $"api://{AppName}" // In the current demo, the application client id is used here.
             },
             Api = new AzureAD.Inputs.ApplicationApiArgs
             {
@@ -61,11 +61,11 @@ public class TrafficControlUI
             }
         });
 
-        var applicationPassword = new AzureAD.ApplicationPassword(
-            $"{prefix}-{AppName}-password",
+        ApplicationPassword = new AzureAD.ApplicationPassword(
+            $"{AppName}-password",
             new AzureAD.ApplicationPasswordArgs
             {
-                ApplicationObjectId = application.ObjectId
+                ApplicationObjectId = Application.ObjectId
             },
             new CustomResourceOptions
             {
@@ -76,24 +76,21 @@ public class TrafficControlUI
             });
 
     //    var servicePrincipal = new AzureAD.ServicePrincipal(
-    //$"{prefix}-{AppName}-service-principal",
-    //new AzureAD.ServicePrincipalArgs
-    //{
-    //    ApplicationId = application.ApplicationId,
-    //});
-
-        return applicationPassword;
+    //         $"{AppName}-service-principal",
+    //         new AzureAD.ServicePrincipalArgs
+    //         {
+    //             ApplicationId = Application.ApplicationId,
+    //         });
     }
 
-    // TODO usings
-    private void CreateContainerApp(string prefix, Infrastructure infra, AzureAD.ApplicationPassword applicationPassword)
+    private void CreateContainerApp(Infrastructure infra, string tenantId)
     {
-        var app = new AzureNative.App.ContainerApp(AppName, new()
+        ContainerApp = new App.ContainerApp(AppName, new()
         {
             ResourceGroupName = infra.ResourceGroup.Name,
-            Identity = new AzureNative.App.Inputs.ManagedServiceIdentityArgs
+            Identity = new App.Inputs.ManagedServiceIdentityArgs
             {
-                Type = AzureNative.App.ManagedServiceIdentityType.UserAssigned,
+                Type = App.ManagedServiceIdentityType.UserAssigned,
                 UserAssignedIdentities = infra.ManagedIdentity.Id.Apply(id =>
                 {
                     var im = new Dictionary<string, object>
@@ -104,44 +101,81 @@ public class TrafficControlUI
                 })
             },
             ManagedEnvironmentId = infra.ContainerAppsEnvironment.Id,
-            Template = new AzureNative.App.Inputs.TemplateArgs
+            Template = new App.Inputs.TemplateArgs
             {
-                Containers = new InputList<AzureNative.App.Inputs.ContainerArgs>
+                Containers = new[]
                 {
-                    new AzureNative.App.Inputs.ContainerArgs
+                    new App.Inputs.ContainerArgs
                     {
                         Name = AppName,
                         Image = "amolenk/dapr-trafficcontrol-ui:latest"
                     }
                 },
-                Scale = new AzureNative.App.Inputs.ScaleArgs
+                Scale = new App.Inputs.ScaleArgs
                 {
                     MinReplicas = 1,
                     MaxReplicas = 1
                 }
             },
-            Configuration = new AzureNative.App.Inputs.ConfigurationArgs
+            Configuration = new App.Inputs.ConfigurationArgs
             {
-                ActiveRevisionsMode = AzureNative.App.ActiveRevisionsMode.Single,
-                Dapr = new AzureNative.App.Inputs.DaprArgs
+                ActiveRevisionsMode = App.ActiveRevisionsMode.Single,
+                Dapr = new App.Inputs.DaprArgs
                 {
                     Enabled = true,
-                    AppId = AppName, // TODO: Test (was trafficcontrolui in original)
+                    AppId = AppName,
                     AppPort = 80
                 },
-                Ingress = new AzureNative.App.Inputs.IngressArgs
+                Ingress = new App.Inputs.IngressArgs
                 {
                     External = true,
                     TargetPort = 80
                 },
-                Secrets = new InputList<AzureNative.App.Inputs.SecretArgs>
+                Secrets = new[]
                 {
-                    new AzureNative.App.Inputs.SecretArgs
+                    new App.Inputs.SecretArgs
                     {
                         Name = "microsoft-provider-authentication-secret",
-                        Value = applicationPassword.Value
+                        Value = ApplicationPassword.Value
                     }
                 }
+            }
+        });
+
+        new App.ContainerAppsAuthConfig("current", new()
+        {
+            ResourceGroupName = infra.ResourceGroup.Name,
+            ContainerAppName = ContainerApp.Name,
+            Platform = new App.Inputs.AuthPlatformArgs
+            {
+                Enabled = true,
+            },
+            GlobalValidation = new App.Inputs.GlobalValidationArgs
+            {
+                UnauthenticatedClientAction = App.UnauthenticatedClientActionV2.AllowAnonymous
+            },
+            IdentityProviders = new App.Inputs.IdentityProvidersArgs
+            {
+                AzureActiveDirectory = new App.Inputs.AzureActiveDirectoryArgs
+                {
+                    Registration = new App.Inputs.AzureActiveDirectoryRegistrationArgs
+                    {
+                        OpenIdIssuer = $"https://sts.windows.net/{tenantId}/v2.0",
+                        ClientId = Application.ApplicationId,
+                        ClientSecretSettingName = "microsoft-provider-authentication-secret"
+                    },
+                    Validation = new App.Inputs.AzureActiveDirectoryValidationArgs
+                    {
+                        AllowedAudiences = new[]
+                        {
+                            Output.Format($"api://{Application.ApplicationId}")
+                        }
+                    }
+                }
+            },
+            Login = new App.Inputs.LoginArgs
+            {
+                PreserveUrlFragmentsForLogins = false
             }
         });
     }

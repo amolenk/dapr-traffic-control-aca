@@ -1,9 +1,9 @@
-using App = Pulumi.AzureNative.App; 
+﻿using App = Pulumi.AzureNative.App; 
 using Authorization = Pulumi.AzureNative.Authorization;
 using DocumentDB = Pulumi.AzureNative.DocumentDB; 
 using Insights = Pulumi.AzureNative.Insights.V20200202; 
 using KeyVault = Pulumi.AzureNative.KeyVault;
-using ManagedIdentity = Pulumi.AzureNative.ManagedIdentity.V20220131Preview; 
+using ManagedIdentity = Pulumi.AzureNative.ManagedIdentity; 
 using Network = Pulumi.AzureNative.Network; 
 using OperationalInsights = Pulumi.AzureNative.OperationalInsights;
 using Random = Pulumi.Random; 
@@ -63,8 +63,6 @@ public class Infrastructure
         });
     }
 
-    // TODO Split this up?
-    // return new { Workspace = ..., AppInsights = ... }
     private void CreateContainerAppsEnvironment()
     {
         var workspace = new OperationalInsights.Workspace("log-analytics", new()
